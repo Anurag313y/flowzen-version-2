@@ -9,10 +9,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useSuperAdminStore } from '@/store/superAdminStore';
-import { Bell, LogOut, User, Settings } from 'lucide-react';
+import { useSuperAdminStore, Client } from '@/store/superAdminStore';
+import { Bell, LogOut, User, Settings, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { BranchSelector, Branch } from '@/components/shared/BranchSelector';
+import { useState } from 'react';
 
 interface SuperAdminHeaderProps {
   sidebarCollapsed: boolean;
@@ -20,9 +22,19 @@ interface SuperAdminHeaderProps {
 
 export function SuperAdminHeader({ sidebarCollapsed }: SuperAdminHeaderProps) {
   const navigate = useNavigate();
-  const { superAdminUser, logoutSuperAdmin, complaints } = useSuperAdminStore();
+  const { superAdminUser, logoutSuperAdmin, complaints, clients } = useSuperAdminStore();
   
   const openComplaints = complaints.filter(c => c.status !== 'resolved').length;
+
+  // Get unique clients as "branches" for super admin context
+  const clientBranches: Branch[] = clients.slice(0, 10).map(c => ({
+    id: c.id,
+    name: c.businessName,
+    city: c.city,
+    isMain: false,
+  }));
+
+  const [selectedClient, setSelectedClient] = useState<Branch | null>(null);
 
   const handleLogout = () => {
     logoutSuperAdmin();
@@ -30,21 +42,42 @@ export function SuperAdminHeader({ sidebarCollapsed }: SuperAdminHeaderProps) {
     navigate('/super-admin/login');
   };
 
+  const handleClientSelect = (branch: Branch) => {
+    setSelectedClient(branch);
+    toast.info(`Viewing ${branch.name}`);
+    navigate(`/super-admin/clients/${branch.id}`);
+  };
+
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 h-16 bg-slate-800 border-b border-slate-700 z-30 transition-all duration-300 flex items-center justify-between px-6",
+        "fixed top-0 right-0 h-16 bg-slate-800 border-b border-slate-700 z-30 transition-all duration-300 flex items-center justify-between px-4",
         sidebarCollapsed ? "left-16" : "left-64"
       )}
     >
-      <div>
-        <h2 className="font-semibold text-white">Super Admin Console</h2>
-        <p className="text-xs text-slate-400">Flozen SaaS Management</p>
+      <div className="flex items-center gap-4">
+        <div>
+          <h2 className="font-semibold text-white">Super Admin Console</h2>
+          <p className="text-xs text-slate-400">Flozen SaaS Management</p>
+        </div>
+        
+        {/* Quick Client Selector */}
+        {clientBranches.length > 0 && (
+          <div className="hidden md:block ml-4">
+            <BranchSelector
+              branches={clientBranches}
+              selectedBranch={selectedClient}
+              onSelectBranch={handleClientSelect}
+              variant="compact"
+              className="bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600 w-[200px]"
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative text-slate-400 hover:text-white hover:bg-slate-700" onClick={() => navigate('/super-admin/complaints')}>
+        <Button variant="ghost" size="icon" className="relative text-slate-400 hover:text-white hover:bg-slate-700 h-9 w-9" onClick={() => navigate('/super-admin/complaints')}>
           <Bell className="h-5 w-5" />
           {openComplaints > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
