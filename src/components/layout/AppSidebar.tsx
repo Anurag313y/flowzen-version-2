@@ -26,6 +26,7 @@ import {
   ChefHat,
   LayoutGrid,
   Tag,
+  CreditCard,
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -53,6 +54,7 @@ const sidebarItems: SidebarItem[] = [
   { id: 'online-orders', label: 'Online Orders', icon: Globe, path: '/online-orders', section: 'management', badge: 2 },
   
   // Business Section
+  { id: 'subscription', label: 'Subscription', icon: CreditCard, path: '/subscription', section: 'business' },
   { id: 'discounts', label: 'Discounts', icon: Tag, path: '/discounts', section: 'business' },
   { id: 'reports', label: 'Reports', icon: BarChart3, path: '/reports', section: 'business' },
   { id: 'settings', label: 'Settings', icon: Settings, path: '/settings', section: 'business' },
