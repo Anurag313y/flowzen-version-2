@@ -83,14 +83,15 @@ const sidebarItems: SidebarItem[] = [
 interface SectionConfig {
   key: 'operations' | 'management' | 'business' | 'hotel' | 'system';
   title: string;
+  icon: React.ElementType;
 }
 
 const sections: SectionConfig[] = [
-  { key: 'operations', title: 'Operations' },
-  { key: 'management', title: 'Management' },
-  { key: 'business', title: 'Business' },
-  { key: 'hotel', title: 'Hotel PMS' },
-  { key: 'system', title: 'System' },
+  { key: 'operations', title: 'Operations', icon: ShoppingCart },
+  { key: 'management', title: 'Management', icon: Utensils },
+  { key: 'business', title: 'Business', icon: BarChart3 },
+  { key: 'hotel', title: 'Hotel PMS', icon: Building2 },
+  { key: 'system', title: 'System', icon: Settings },
 ];
 
 interface AppSidebarProps {
@@ -130,6 +131,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
     const items = sidebarItems.filter(item => item.section === section.key);
     const isOpen = openSections[section.key];
     const hasActiveItem = items.some(item => location.pathname === item.path);
+    const SectionIcon = section.icon;
     
     return (
       <Collapsible
@@ -146,17 +148,20 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               : "text-sidebar-muted hover:bg-sidebar-accent/30 hover:text-sidebar-foreground",
             collapsed && "justify-center px-2"
           )}
+          title={collapsed ? section.title : undefined}
         >
-          {!collapsed && <span>{section.title}</span>}
           {collapsed ? (
-            <div className="w-1.5 h-1.5 rounded-full bg-current" />
+            <SectionIcon className="h-4 w-4" />
           ) : (
-            <ChevronDown 
-              className={cn(
-                "h-3.5 w-3.5 transition-transform duration-200",
-                isOpen && "rotate-180"
-              )} 
-            />
+            <>
+              <span>{section.title}</span>
+              <ChevronDown 
+                className={cn(
+                  "h-3.5 w-3.5 transition-transform duration-200",
+                  isOpen && "rotate-180"
+                )} 
+              />
+            </>
           )}
         </CollapsibleTrigger>
         
