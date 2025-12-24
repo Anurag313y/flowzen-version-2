@@ -138,7 +138,7 @@ export default function PMSBillingPage() {
         ) : (
           filteredReservations.map(reservation => {
             const guest = guests.find(g => g.id === reservation.guestId);
-            const folio = folios.find(f => f.reservationId === reservation.id);
+            const folio = getFolio(reservation.id);
             const balance = folio?.balance || 0;
 
             return (
@@ -151,7 +151,6 @@ export default function PMSBillingPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-primary/10">
-                        <User className="h-5 w-5 text-primary" />
                         <User className="h-5 w-5 text-primary" />
                       </div>
                       <div>
@@ -201,10 +200,8 @@ export default function PMSBillingPage() {
               guestName={`${selectedGuest.firstName} ${selectedGuest.lastName}`}
               onAddCharge={handleAddCharge}
               onAddPayment={handleAddPayment}
-              onVoidItem={() => {}}
-              onTransferItem={() => {}}
-              onPrintFolio={() => toast({ title: 'Print', description: 'Printing folio...' })}
-              onEmailFolio={() => toast({ title: 'Email', description: 'Sending folio via email...' })}
+              onPrint={() => toast({ title: 'Print', description: 'Printing folio...' })}
+              onExportPDF={() => toast({ title: 'Export', description: 'Exporting folio as PDF...' })}
             />
           )}
         </DialogContent>

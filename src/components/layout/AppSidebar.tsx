@@ -66,9 +66,15 @@ const sidebarItems: SidebarItem[] = [
   { id: 'settings', label: 'Settings', icon: Settings, path: '/settings', section: 'business' },
   
   // Hotel PMS Section
-  { id: 'reservations', label: 'Reservations', icon: CalendarDays, path: '/reservations', section: 'hotel' },
-  { id: 'housekeeping', label: 'Housekeeping', icon: ClipboardCheck, path: '/housekeeping', section: 'hotel' },
-  { id: 'maintenance', label: 'Maintenance', icon: Wrench, path: '/maintenance', section: 'hotel' },
+  { id: 'pms-dashboard', label: 'PMS Dashboard', icon: Building2, path: '/pms', section: 'hotel' },
+  { id: 'pms-reservations', label: 'Reservations', icon: CalendarDays, path: '/pms/reservations', section: 'hotel' },
+  { id: 'pms-room-rack', label: 'Room Rack', icon: Grid3X3, path: '/pms/room-rack', section: 'hotel' },
+  { id: 'pms-front-desk', label: 'Front Desk', icon: DoorOpen, path: '/pms/front-desk', section: 'hotel' },
+  { id: 'pms-housekeeping', label: 'Housekeeping', icon: ClipboardCheck, path: '/pms/housekeeping', section: 'hotel' },
+  { id: 'pms-maintenance', label: 'Maintenance', icon: Wrench, path: '/pms/maintenance', section: 'hotel' },
+  { id: 'pms-billing', label: 'Billing & Folios', icon: Receipt, path: '/pms/billing', section: 'hotel' },
+  { id: 'pms-rates', label: 'Rates & Inventory', icon: DollarSign, path: '/pms/rates', section: 'hotel' },
+  { id: 'pms-settings', label: 'PMS Settings', icon: Cog, path: '/pms/settings', section: 'hotel' },
   
   // System Section
   { id: 'configurations', label: 'Configurations', icon: Settings, path: '/configurations', section: 'system' },
