@@ -19,7 +19,8 @@ import { addDays, subDays, differenceInDays } from 'date-fns';
 const generateMockRooms = (): Room[] => {
   const rooms: Room[] = [];
   const types: Room['type'][] = ['standard', 'deluxe', 'suite', 'executive'];
-  const statuses: Room['status'][] = ['available', 'occupied', 'reserved', 'maintenance', 'cleaning'];
+  // Initial status - will be updated based on reservations
+  const initialStatuses: Room['status'][] = ['available', 'reserved', 'maintenance', 'cleaning'];
   
   for (let floor = 1; floor <= 4; floor++) {
     for (let num = 1; num <= 10; num++) {
@@ -29,10 +30,10 @@ const generateMockRooms = (): Room[] => {
         number: roomNum,
         floor,
         type: types[Math.floor(Math.random() * types.length)],
-        status: statuses[Math.floor(Math.random() * statuses.length)],
+        status: initialStatuses[Math.floor(Math.random() * initialStatuses.length)],
         housekeepingStatus: ['clean', 'dirty', 'inspected'][Math.floor(Math.random() * 3)] as HousekeepingStatus,
         maxOccupancy: 2 + Math.floor(Math.random() * 3),
-        baseRate: 100 + Math.floor(Math.random() * 200),
+        baseRate: 1500 + Math.floor(Math.random() * 3000),
         amenities: ['WiFi', 'TV', 'AC', 'Mini Bar'].slice(0, 2 + Math.floor(Math.random() * 3)),
       });
     }
@@ -58,41 +59,82 @@ const generateMockGuests = (): Guest[] => {
   }));
 };
 
-const generateMockReservations = (rooms: Room[], guests: Guest[]): Reservation[] => {
-  const statuses: ReservationStatus[] = ['confirmed', 'checked_in', 'checked_out', 'cancelled'];
+const generateMockReservations = (rooms: Room[], guests: Guest[]): { reservations: Reservation[], updatedRooms: Room[] } => {
   const sources: Reservation['source'][] = ['direct', 'booking', 'expedia', 'phone', 'walk-in'];
+  const reservations: Reservation[] = [];
+  const updatedRooms = [...rooms];
   
-  return Array.from({ length: 25 }, (_, i) => {
-    const checkIn = addDays(new Date(), Math.floor(Math.random() * 30) - 10);
-    const nights = 1 + Math.floor(Math.random() * 5);
+  // Get available rooms for check-in (not maintenance)
+  const availableForCheckIn = updatedRooms.filter(r => r.status !== 'maintenance');
+  
+  // Create checked-in reservations for some rooms
+  const checkedInCount = Math.min(15, Math.floor(availableForCheckIn.length * 0.4));
+  for (let i = 0; i < checkedInCount; i++) {
+    const room = availableForCheckIn[i];
     const guest = guests[i % guests.length];
-    const room = rooms[i % rooms.length];
+    const checkIn = subDays(new Date(), Math.floor(Math.random() * 3));
+    const nights = 2 + Math.floor(Math.random() * 4);
     const rate = room.baseRate;
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
     
-    return {
+    // Mark room as occupied
+    const roomIndex = updatedRooms.findIndex(r => r.id === room.id);
+    updatedRooms[roomIndex] = { ...updatedRooms[roomIndex], status: 'occupied' };
+    
+    reservations.push({
       id: `res-${i + 1}`,
       confirmationNumber: `CNF${String(100000 + i).slice(1)}`,
       guestId: guest.id,
       guest,
-      roomId: status === 'checked_in' || status === 'checked_out' ? room.id : undefined,
-      room: status === 'checked_in' || status === 'checked_out' ? room : undefined,
+      roomId: room.id,
+      room: updatedRooms[roomIndex],
       roomType: room.type,
       checkIn,
       checkOut: addDays(checkIn, nights),
       nights,
       adults: 1 + Math.floor(Math.random() * 2),
       children: Math.floor(Math.random() * 2),
-      status,
-      paymentStatus: status === 'checked_out' ? 'paid' : status === 'checked_in' ? 'partial' : 'pending',
+      status: 'checked_in',
+      paymentStatus: 'partial',
       source: sources[Math.floor(Math.random() * sources.length)],
       ratePerNight: rate,
       totalAmount: rate * nights,
-      paidAmount: status === 'checked_out' ? rate * nights : status === 'checked_in' ? rate : 0,
-      createdAt: subDays(checkIn, Math.floor(Math.random() * 30)),
+      paidAmount: rate,
+      createdAt: subDays(checkIn, Math.floor(Math.random() * 10)),
       updatedAt: new Date(),
-    };
-  });
+    });
+  }
+  
+  // Create some confirmed (future) reservations
+  for (let i = checkedInCount; i < checkedInCount + 8; i++) {
+    const guest = guests[i % guests.length];
+    const room = rooms[i % rooms.length];
+    const checkIn = addDays(new Date(), 1 + Math.floor(Math.random() * 7));
+    const nights = 1 + Math.floor(Math.random() * 3);
+    const rate = room.baseRate;
+    
+    reservations.push({
+      id: `res-${i + 1}`,
+      confirmationNumber: `CNF${String(100000 + i).slice(1)}`,
+      guestId: guest.id,
+      guest,
+      roomType: room.type,
+      checkIn,
+      checkOut: addDays(checkIn, nights),
+      nights,
+      adults: 1 + Math.floor(Math.random() * 2),
+      children: Math.floor(Math.random() * 2),
+      status: 'confirmed',
+      paymentStatus: 'pending',
+      source: sources[Math.floor(Math.random() * sources.length)],
+      ratePerNight: rate,
+      totalAmount: rate * nights,
+      paidAmount: 0,
+      createdAt: subDays(new Date(), Math.floor(Math.random() * 5)),
+      updatedAt: new Date(),
+    });
+  }
+  
+  return { reservations, updatedRooms };
 };
 
 const generateMockHousekeeping = (rooms: Room[]): HousekeepingTask[] => {
@@ -176,9 +218,10 @@ interface PMSState {
 }
 
 export const usePMSStore = create<PMSState>((set, get) => {
-  const rooms = generateMockRooms();
+  const initialRooms = generateMockRooms();
   const guests = generateMockGuests();
-  const reservations = generateMockReservations(rooms, guests);
+  const { reservations, updatedRooms } = generateMockReservations(initialRooms, guests);
+  const rooms = updatedRooms;
   const housekeepingTasks = generateMockHousekeeping(rooms);
   const maintenanceTickets = generateMockMaintenance(rooms);
   
