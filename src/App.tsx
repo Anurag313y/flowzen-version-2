@@ -30,6 +30,7 @@ import OnlineOrdersPage from "./pages/OnlineOrdersPage";
 import MaintenancePage from "./pages/MaintenancePage";
 import DiscountsPage from "./pages/DiscountsPage";
 import ConfigurationsPage from "./pages/ConfigurationsPage";
+import SubscriptionManagementPage from "./pages/SubscriptionManagementPage";
 
 // Super Admin Pages
 import SuperAdminLoginPage from "./pages/super-admin/SuperAdminLoginPage";
@@ -138,6 +139,7 @@ function AppRoutes() {
         <Route path="/housekeeping" element={<HousekeepingPage />} />
         <Route path="/maintenance" element={<MaintenancePage />} />
         <Route path="/configurations" element={<ConfigurationsPage />} />
+        <Route path="/subscription" element={<SubscriptionManagementPage />} />
         <Route path="/audit" element={<AuditPage />} />
       </Route>
 

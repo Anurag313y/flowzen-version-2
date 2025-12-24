@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react';
-import { Search, UserCog, User, Shield, ExternalLink, Clock, AlertTriangle } from 'lucide-react';
+import { Search, UserCog, User, Shield, ExternalLink, Clock, AlertTriangle, Building2, ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
-import { useSuperAdminStore } from '@/store/superAdminStore';
+import { useSuperAdminStore, Branch } from '@/store/superAdminStore';
 import { useSupportSessionStore } from '@/store/supportSessionStore';
 import {
   Dialog,
@@ -24,6 +24,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 
 type AccessRole = 'admin' | 'waiter';
@@ -34,8 +46,10 @@ export default function SupportAccessPage() {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<AccessRole>('admin');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [expandedClients, setExpandedClients] = useState<string[]>([]);
 
   const filteredClients = useMemo(() => {
     if (!searchQuery.trim()) return clients.filter(c => c.status === 'active');
@@ -45,7 +59,11 @@ export default function SupportAccessPage() {
         c.businessName.toLowerCase().includes(query) ||
         c.ownerName.toLowerCase().includes(query) ||
         c.city.toLowerCase().includes(query) ||
-        c.id.toLowerCase().includes(query)
+        c.id.toLowerCase().includes(query) ||
+        c.branches.some(b => 
+          b.name.toLowerCase().includes(query) ||
+          b.city.toLowerCase().includes(query)
+        )
       )
     );
   }, [clients, searchQuery]);
@@ -55,25 +73,41 @@ export default function SupportAccessPage() {
     [clients, selectedClient]
   );
 
+  const selectedBranchData = useMemo(() => 
+    selectedClientData?.branches.find(b => b.id === selectedBranch),
+    [selectedClientData, selectedBranch]
+  );
+
+  const toggleClientExpand = (clientId: string) => {
+    setExpandedClients(prev => 
+      prev.includes(clientId) 
+        ? prev.filter(id => id !== clientId)
+        : [...prev, clientId]
+    );
+  };
+
+  const handleSelectBranch = (clientId: string, branchId: string) => {
+    setSelectedClient(clientId);
+    setSelectedBranch(branchId);
+  };
+
   const handleLoginAsClient = () => {
-    if (!selectedClientData) return;
+    if (!selectedClientData || !selectedBranchData) return;
     setShowConfirmDialog(true);
   };
 
   const confirmLogin = () => {
-    if (!selectedClientData) return;
+    if (!selectedClientData || !selectedBranchData) return;
 
-    // Generate session
     const session = startSupportSession({
       clientId: selectedClientData.id,
-      clientName: selectedClientData.businessName,
+      clientName: `${selectedClientData.businessName} - ${selectedBranchData.name}`,
       role: selectedRole,
       superAdminId: superAdminUser?.id || 'unknown',
     });
 
-    // Log the access
     addActivityLog({
-      action: `Support login as ${selectedRole === 'admin' ? 'Restaurant Admin' : 'Waiter'}`,
+      action: `Support login as ${selectedRole === 'admin' ? 'Restaurant Admin' : 'Waiter'} (${selectedBranchData.name})`,
       targetType: 'client',
       targetId: selectedClientData.id,
       targetName: selectedClientData.businessName,
@@ -83,12 +117,11 @@ export default function SupportAccessPage() {
 
     setShowConfirmDialog(false);
 
-    // Open in new tab with session token
     const targetPath = selectedRole === 'admin' ? '/dashboard' : '/waiter';
-    const url = `${window.location.origin}${targetPath}?support_session=${session.id}`;
+    const url = `${window.location.origin}${targetPath}?support_session=${session.id}&branch=${selectedBranch}`;
     window.open(url, '_blank');
 
-    toast.success(`Support session started for ${selectedClientData.businessName}`, {
+    toast.success(`Support session started for ${selectedBranchData.name}`, {
       description: `Session expires in 30 minutes`,
     });
   };
@@ -125,94 +158,99 @@ export default function SupportAccessPage() {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Client Search */}
+        {/* Client & Branch Search */}
         <Card className="lg:col-span-2 bg-white border-slate-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg text-slate-800">Search Client</CardTitle>
-            <CardDescription>Find the client you need to access</CardDescription>
+            <CardTitle className="text-lg text-slate-800">Select Client & Branch</CardTitle>
+            <CardDescription>Choose the specific branch you need to access</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Search by business name, owner, city, or ID..."
+                placeholder="Search by business, branch, owner, city, or ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
 
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="w-12"></TableHead>
-                    <TableHead>Business</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Services</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredClients.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-slate-500">
-                        No active clients found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredClients.map((client) => (
-                      <TableRow 
-                        key={client.id}
-                        className={`cursor-pointer transition-colors ${
-                          selectedClient === client.id 
-                            ? 'bg-primary/5 border-l-2 border-l-primary' 
-                            : 'hover:bg-slate-50'
-                        }`}
-                        onClick={() => setSelectedClient(client.id)}
-                      >
-                        <TableCell>
-                          <div className={`w-4 h-4 rounded-full border-2 ${
-                            selectedClient === client.id 
-                              ? 'border-primary bg-primary' 
-                              : 'border-slate-300'
-                          }`}>
-                            {selectedClient === client.id && (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <div className="w-2 h-2 bg-white rounded-full" />
+            <div className="border rounded-lg overflow-hidden max-h-[500px] overflow-y-auto">
+              {filteredClients.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  No active clients found
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {filteredClients.map((client) => (
+                    <Collapsible
+                      key={client.id}
+                      open={expandedClients.includes(client.id)}
+                      onOpenChange={() => toggleClientExpand(client.id)}
+                    >
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="p-2 rounded-lg bg-slate-100">
+                              <Building2 className="h-5 w-5 text-slate-600" />
+                            </div>
+                            <div className="text-left">
+                              <p className="font-medium text-slate-800">{client.businessName}</p>
+                              <p className="text-sm text-slate-500">{client.ownerName} • {client.city}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Badge className={getBusinessTypeBadge(client.businessType)}>
+                              {client.businessType.charAt(0).toUpperCase() + client.businessType.slice(1)}
+                            </Badge>
+                            <Badge variant="outline" className="text-slate-600">
+                              {client.branches.filter(b => b.status === 'active').length} branches
+                            </Badge>
+                            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${expandedClients.includes(client.id) ? 'rotate-180' : ''}`} />
+                          </div>
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="bg-slate-50 px-4 pb-4">
+                          <div className="grid gap-2">
+                            {client.branches.filter(b => b.status === 'active').map((branch) => (
+                              <div
+                                key={branch.id}
+                                onClick={() => handleSelectBranch(client.id, branch.id)}
+                                className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all ${
+                                  selectedClient === client.id && selectedBranch === branch.id
+                                    ? 'bg-primary/10 border-2 border-primary'
+                                    : 'bg-white border border-slate-200 hover:border-slate-300'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-3 h-3 rounded-full ${
+                                    selectedClient === client.id && selectedBranch === branch.id
+                                      ? 'bg-primary'
+                                      : 'border-2 border-slate-300'
+                                  }`} />
+                                  <div>
+                                    <p className="font-medium text-slate-800 text-sm">
+                                      {branch.name}
+                                      {branch.isMain && (
+                                        <Badge className="ml-2 text-xs bg-primary/10 text-primary">Main</Badge>
+                                      )}
+                                    </p>
+                                    <p className="text-xs text-slate-500">{branch.city}, {branch.state}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-slate-500">{branch.phone}</p>
+                                </div>
                               </div>
-                            )}
+                            ))}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium text-slate-800">{client.businessName}</p>
-                            <p className="text-sm text-slate-500">{client.id}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getBusinessTypeBadge(client.businessType)}>
-                            {client.businessType.charAt(0).toUpperCase() + client.businessType.slice(1)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-slate-600">
-                          {client.city}, {client.state}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            {client.posEnabled && (
-                              <Badge variant="outline" className="text-xs">POS</Badge>
-                            )}
-                            {client.pmsEnabled && (
-                              <Badge variant="outline" className="text-xs">PMS</Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -224,16 +262,19 @@ export default function SupportAccessPage() {
             <CardDescription>Configure support session settings</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {selectedClientData ? (
+            {selectedClientData && selectedBranchData ? (
               <>
-                {/* Selected Client Info */}
-                <div className="p-4 bg-slate-50 rounded-lg space-y-2">
+                {/* Selected Branch Info */}
+                <div className="p-4 bg-slate-50 rounded-lg space-y-3">
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium text-slate-700">Selected Client</span>
+                    <span className="text-sm font-medium text-slate-700">Selected Branch</span>
                   </div>
-                  <p className="font-semibold text-slate-800">{selectedClientData.businessName}</p>
-                  <p className="text-sm text-slate-500">{selectedClientData.ownerName}</p>
+                  <div className="space-y-1">
+                    <p className="font-semibold text-slate-800">{selectedBranchData.name}</p>
+                    <p className="text-sm text-slate-600">{selectedClientData.businessName}</p>
+                    <p className="text-xs text-slate-500">{selectedBranchData.city}, {selectedBranchData.state}</p>
+                  </div>
                 </div>
 
                 {/* Role Selection */}
@@ -285,13 +326,13 @@ export default function SupportAccessPage() {
                   onClick={handleLoginAsClient}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Login as Client
+                  Login to Branch
                 </Button>
               </>
             ) : (
               <div className="text-center py-8 text-slate-500">
-                <UserCog className="h-12 w-12 mx-auto mb-3 text-slate-300" />
-                <p>Select a client to configure access</p>
+                <Building2 className="h-12 w-12 mx-auto mb-3 text-slate-300" />
+                <p>Select a branch to configure access</p>
               </div>
             )}
           </CardContent>
@@ -347,6 +388,14 @@ export default function SupportAccessPage() {
               <div className="flex justify-between">
                 <span className="text-sm text-slate-500">Client</span>
                 <span className="text-sm font-medium text-slate-800">{selectedClientData?.businessName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-slate-500">Branch</span>
+                <span className="text-sm font-medium text-slate-800">{selectedBranchData?.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-slate-500">Location</span>
+                <span className="text-sm font-medium text-slate-800">{selectedBranchData?.city}, {selectedBranchData?.state}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-slate-500">Access Role</span>
