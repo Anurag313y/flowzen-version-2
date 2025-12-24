@@ -27,6 +27,12 @@ import {
   LayoutGrid,
   Tag,
   CreditCard,
+  Building2,
+  Grid3X3,
+  DoorOpen,
+  Receipt,
+  DollarSign,
+  Cog,
 } from 'lucide-react';
 
 interface SidebarItem {
