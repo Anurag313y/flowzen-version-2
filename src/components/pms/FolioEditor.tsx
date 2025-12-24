@@ -134,13 +134,13 @@ export function FolioEditor({
         <div className="p-4 bg-muted rounded-lg">
           <div className="text-sm text-muted-foreground">Total Charges</div>
           <div className="text-2xl font-semibold text-foreground">
-            ${folio.totalCharges.toFixed(2)}
+            ₹{folio.totalCharges.toFixed(2)}
           </div>
         </div>
         <div className="p-4 bg-muted rounded-lg">
           <div className="text-sm text-muted-foreground">Payments</div>
           <div className="text-2xl font-semibold text-success">
-            ${folio.totalPayments.toFixed(2)}
+            ₹{folio.totalPayments.toFixed(2)}
           </div>
         </div>
         <div className={cn(
@@ -152,7 +152,7 @@ export function FolioEditor({
             "text-2xl font-semibold",
             folio.balance > 0 ? "text-destructive" : "text-success"
           )}>
-            ${folio.balance.toFixed(2)}
+            ₹{folio.balance.toFixed(2)}
           </div>
         </div>
       </div>
@@ -200,8 +200,8 @@ export function FolioEditor({
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-medium">${item.amount.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">₹{item.unitPrice.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-medium">₹{item.amount.toFixed(2)}</TableCell>
                   </TableRow>
                 ))
               )}
@@ -245,7 +245,7 @@ export function FolioEditor({
                     <TableCell>{format(item.date, 'MMM d, HH:mm')}</TableCell>
                     <TableCell>{item.description}</TableCell>
                     <TableCell className="text-right font-medium text-success">
-                      ${Math.abs(item.amount).toFixed(2)}
+                      ₹{Math.abs(item.amount).toFixed(2)}
                     </TableCell>
                   </TableRow>
                 ))
@@ -312,7 +312,7 @@ export function FolioEditor({
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Unit Price ($)</label>
+                <label className="text-sm font-medium">Unit Price (₹)</label>
                 <Input
                   type="number"
                   value={chargeAmount}
@@ -327,7 +327,7 @@ export function FolioEditor({
                 <div className="flex justify-between">
                   <span>Total:</span>
                   <span className="font-semibold">
-                    ${(parseFloat(chargeAmount || '0') * chargeQuantity).toFixed(2)}
+                    ₹{(parseFloat(chargeAmount || '0') * chargeQuantity).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -368,7 +368,7 @@ export function FolioEditor({
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Amount ($)</label>
+              <label className="text-sm font-medium">Amount (₹)</label>
               <Input
                 type="number"
                 value={paymentAmount}
@@ -380,12 +380,12 @@ export function FolioEditor({
             <div className="p-3 bg-muted rounded-lg space-y-1 text-sm">
               <div className="flex justify-between">
                 <span>Current Balance:</span>
-                <span>${folio.balance.toFixed(2)}</span>
+                <span>₹{folio.balance.toFixed(2)}</span>
               </div>
               {paymentAmount && (
                 <div className="flex justify-between font-semibold">
                   <span>New Balance:</span>
-                  <span>${Math.max(0, folio.balance - parseFloat(paymentAmount || '0')).toFixed(2)}</span>
+                  <span>₹{Math.max(0, folio.balance - parseFloat(paymentAmount || '0')).toFixed(2)}</span>
                 </div>
               )}
             </div>

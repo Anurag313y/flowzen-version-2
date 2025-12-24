@@ -33,6 +33,7 @@ import {
   Receipt,
   DollarSign,
   Cog,
+  BedDouble,
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -65,13 +66,12 @@ const sidebarItems: SidebarItem[] = [
   { id: 'reports', label: 'Reports', icon: BarChart3, path: '/reports', section: 'business' },
   { id: 'settings', label: 'Settings', icon: Settings, path: '/settings', section: 'business' },
   
-  // Hotel PMS Section
+  // Hotel PMS Section (Optimized - Room Dashboard is primary)
   { id: 'pms-dashboard', label: 'PMS Dashboard', icon: Building2, path: '/pms', section: 'hotel' },
+  { id: 'pms-rooms', label: 'Room Dashboard', icon: BedDouble, path: '/pms/rooms', section: 'hotel' },
   { id: 'pms-reservations', label: 'Reservations', icon: CalendarDays, path: '/pms/reservations', section: 'hotel' },
-  { id: 'pms-room-rack', label: 'Room Rack', icon: Grid3X3, path: '/pms/room-rack', section: 'hotel' },
   { id: 'pms-front-desk', label: 'Front Desk', icon: DoorOpen, path: '/pms/front-desk', section: 'hotel' },
   { id: 'pms-housekeeping', label: 'Housekeeping', icon: ClipboardCheck, path: '/pms/housekeeping', section: 'hotel' },
-  { id: 'pms-maintenance', label: 'Maintenance', icon: Wrench, path: '/pms/maintenance', section: 'hotel' },
   { id: 'pms-billing', label: 'Billing & Folios', icon: Receipt, path: '/pms/billing', section: 'hotel' },
   { id: 'pms-rates', label: 'Rates & Inventory', icon: DollarSign, path: '/pms/rates', section: 'hotel' },
   { id: 'pms-settings', label: 'PMS Settings', icon: Cog, path: '/pms/settings', section: 'hotel' },

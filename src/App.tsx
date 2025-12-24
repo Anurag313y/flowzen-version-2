@@ -60,6 +60,7 @@ import PMSMaintenancePage from "./pages/pms/PMSMaintenancePage";
 import PMSBillingPage from "./pages/pms/PMSBillingPage";
 import PMSRatesPage from "./pages/pms/PMSRatesPage";
 import PMSSettingsPage from "./pages/pms/PMSSettingsPage";
+import PMSRoomDashboardPage from "./pages/pms/PMSRoomDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -155,6 +156,7 @@ function AppRoutes() {
         
         {/* Hotel PMS Routes */}
         <Route path="/pms" element={<PMSDashboardPage />} />
+        <Route path="/pms/rooms" element={<PMSRoomDashboardPage />} />
         <Route path="/pms/reservations" element={<PMSReservationsPage />} />
         <Route path="/pms/room-rack" element={<PMSRoomRackPage />} />
         <Route path="/pms/front-desk" element={<PMSFrontDeskPage />} />

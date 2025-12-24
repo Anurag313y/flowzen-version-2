@@ -233,7 +233,7 @@ export function RoomRack({
                                         {format(reservation.checkIn, 'MMM d')} - {format(reservation.checkOut, 'MMM d')}
                                       </div>
                                       <div className="capitalize">{reservation.status.replace('_', ' ')}</div>
-                                      <div>${reservation.totalAmount.toFixed(2)}</div>
+                                      <div>₹{reservation.totalAmount.toFixed(2)}</div>
                                     </div>
                                   </TooltipContent>
                                 </Tooltip>

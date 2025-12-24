@@ -87,7 +87,7 @@ export default function PMSFrontDeskPage() {
                     <div>
                       <p className="font-medium">{res.guest.firstName} {res.guest.lastName}</p>
                       <p className="text-sm text-muted-foreground">
-                        Balance: ${(res.totalAmount - res.paidAmount).toFixed(2)}
+                        Balance: ₹{(res.totalAmount - res.paidAmount).toFixed(2)}
                       </p>
                     </div>
                   </div>
