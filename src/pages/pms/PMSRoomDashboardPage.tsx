@@ -31,7 +31,11 @@ import {
   MapPin,
   CreditCard,
   Minus,
-  Plus
+  Plus,
+  Settings2,
+  Pencil,
+  Trash2,
+  PlusCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Room, Reservation, Guest } from '@/types/pms';
@@ -91,29 +95,29 @@ function RoomCard({ room, reservation, onAction }: RoomCardProps) {
       colors.bg,
       "border-0"
     )}>
-      <CardContent className="p-1.5">
+      <CardContent className="p-2">
         {/* Header: Room Number, Guest/Status, Room Type */}
-        <div className="space-y-0.5 mb-1.5">
+        <div className="space-y-0.5 mb-2">
           {/* Room Number */}
           <div className="text-center">
-            <span className={cn("text-base font-bold", colors.text)}>
+            <span className={cn("text-lg font-bold", colors.text)}>
               {room.number}
             </span>
           </div>
           
           {/* Guest Name & Phone OR Status */}
           {isOccupied && reservation ? (
-            <div className="text-center space-y-0">
-              <div className={cn("text-[10px] font-medium truncate", colors.text)}>
+            <div className="text-center space-y-0.5">
+              <div className={cn("text-xs font-semibold truncate", colors.text)}>
                 {reservation.guest.firstName} {reservation.guest.lastName}
               </div>
-              <div className="text-[9px] text-white/80">
+              <div className="text-[10px] text-white/90">
                 {reservation.guest.phone}
               </div>
             </div>
           ) : (
             <div className="text-center">
-              <span className={cn("text-[10px] font-medium capitalize", colors.text)}>
+              <span className={cn("text-xs font-semibold capitalize", colors.text)}>
                 {room.status}
               </span>
             </div>
@@ -121,49 +125,49 @@ function RoomCard({ room, reservation, onAction }: RoomCardProps) {
           
           {/* Room Type - Full Name */}
           <div className="text-center">
-            <span className="text-[9px] text-white/70 uppercase tracking-wide">
+            <span className="text-[10px] text-white/80 uppercase tracking-wide font-medium">
               {roomTypeLabels[room.type] || room.type}
             </span>
           </div>
         </div>
 
-        {/* Action Icons - 2 Rows of 3 */}
-        <div className="border-t border-white/20 pt-1">
-          <div className="grid grid-cols-3 gap-px">
+        {/* Action Icons - 2 Rows of 3 with bigger icons */}
+        <div className="border-t border-white/20 pt-1.5">
+          <div className="grid grid-cols-3 gap-0.5">
             <ActionButton
-              icon={<CalendarPlus className="h-3 w-3" />}
+              icon={<CalendarPlus className="h-4 w-4" />}
               label="Book"
               onClick={() => onAction('book', room, reservation)}
               disabled={room.status === 'maintenance'}
             />
             <ActionButton
-              icon={<UtensilsCrossed className="h-3 w-3" />}
+              icon={<UtensilsCrossed className="h-4 w-4" />}
               label="KOT"
               onClick={() => onAction('kot', room, reservation)}
               disabled={!isOccupied}
             />
             <ActionButton
-              icon={<LogIn className="h-3 w-3" />}
+              icon={<LogIn className="h-4 w-4" />}
               label="In"
               onClick={() => onAction('checkin', room, reservation)}
               disabled={room.status !== 'reserved' && room.status !== 'available'}
             />
           </div>
-          <div className="grid grid-cols-3 gap-px">
+          <div className="grid grid-cols-3 gap-0.5 mt-0.5">
             <ActionButton
-              icon={<LogOut className="h-3 w-3" />}
+              icon={<LogOut className="h-4 w-4" />}
               label="Out"
               onClick={() => onAction('checkout', room, reservation)}
               disabled={!isOccupied}
             />
             <ActionButton
-              icon={<Receipt className="h-3 w-3" />}
+              icon={<Receipt className="h-4 w-4" />}
               label="Bill"
               onClick={() => onAction('bill', room, reservation)}
               disabled={!isOccupied}
             />
             <ActionButton
-              icon={<Sparkles className="h-3 w-3" />}
+              icon={<Sparkles className="h-4 w-4" />}
               label="Clean"
               onClick={() => onAction('clean', room, reservation)}
               disabled={room.housekeepingStatus === 'clean'}
@@ -186,14 +190,14 @@ function ActionButton({ icon, label, onClick, disabled }: {
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "flex flex-col items-center gap-0 py-1 rounded transition-colors",
+        "flex flex-col items-center gap-0.5 py-1.5 rounded transition-colors",
         disabled 
           ? "opacity-30 cursor-not-allowed" 
           : "hover:bg-white/20 cursor-pointer active:scale-95"
       )}
     >
       <span className="text-white">{icon}</span>
-      <span className="text-[8px] font-medium text-white/80">{label}</span>
+      <span className="text-[9px] font-medium text-white/90">{label}</span>
     </button>
   );
 }
@@ -206,7 +210,10 @@ export default function PMSRoomDashboardPage() {
     checkOut, 
     updateHousekeepingStatus,
     createReservation,
-    getFolio 
+    getFolio,
+    addRoom,
+    updateRoom,
+    deleteRoom
   } = usePMSStore();
   
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -218,6 +225,23 @@ export default function PMSRoomDashboardPage() {
   const [kotDialog, setKotDialog] = React.useState<{ open: boolean; room?: Room; reservation?: Reservation }>({ open: false });
   const [billDialog, setBillDialog] = React.useState<{ open: boolean; room?: Room; reservation?: Reservation }>({ open: false });
   const [checkInDialog, setCheckInDialog] = React.useState<{ open: boolean; room?: Room }>({ open: false });
+  
+  // Room management dialogs
+  const [manageRoomsDialog, setManageRoomsDialog] = React.useState(false);
+  const [roomFormDialog, setRoomFormDialog] = React.useState<{ open: boolean; room?: Room }>({ open: false });
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = React.useState<{ open: boolean; room?: Room }>({ open: false });
+  
+  // Room form state
+  const [roomForm, setRoomForm] = React.useState({
+    number: '',
+    floor: 1,
+    type: 'standard' as Room['type'],
+    status: 'available' as Room['status'],
+    housekeepingStatus: 'clean' as Room['housekeepingStatus'],
+    maxOccupancy: 2,
+    baseRate: 100,
+    amenities: ['WiFi', 'TV', 'AC'],
+  });
   
   // Booking form state
   const [bookingForm, setBookingForm] = React.useState({
@@ -234,6 +258,69 @@ export default function PMSRoomDashboardPage() {
     address: '',
     specialRequests: '',
   });
+
+  // Open room form for editing
+  const openEditRoom = (room: Room) => {
+    setRoomForm({
+      number: room.number,
+      floor: room.floor,
+      type: room.type,
+      status: room.status,
+      housekeepingStatus: room.housekeepingStatus,
+      maxOccupancy: room.maxOccupancy,
+      baseRate: room.baseRate,
+      amenities: room.amenities,
+    });
+    setRoomFormDialog({ open: true, room });
+  };
+
+  // Open room form for new room
+  const openNewRoom = () => {
+    setRoomForm({
+      number: '',
+      floor: 1,
+      type: 'standard',
+      status: 'available',
+      housekeepingStatus: 'clean',
+      maxOccupancy: 2,
+      baseRate: 100,
+      amenities: ['WiFi', 'TV', 'AC'],
+    });
+    setRoomFormDialog({ open: true });
+  };
+
+  // Save room (add or update)
+  const handleSaveRoom = () => {
+    if (!roomForm.number) {
+      toast({ title: 'Error', description: 'Room number is required', variant: 'destructive' });
+      return;
+    }
+    
+    if (roomFormDialog.room) {
+      // Update existing room
+      updateRoom(roomFormDialog.room.id, roomForm);
+      toast({ title: 'Room Updated', description: `Room ${roomForm.number} has been updated` });
+    } else {
+      // Check if room number already exists
+      if (rooms.some(r => r.number === roomForm.number)) {
+        toast({ title: 'Error', description: 'Room number already exists', variant: 'destructive' });
+        return;
+      }
+      // Add new room
+      addRoom(roomForm);
+      toast({ title: 'Room Added', description: `Room ${roomForm.number} has been added` });
+    }
+    setRoomFormDialog({ open: false });
+  };
+
+  // Delete room
+  const handleDeleteRoom = () => {
+    if (deleteConfirmDialog.room) {
+      deleteRoom(deleteConfirmDialog.room.id);
+      toast({ title: 'Room Deleted', description: `Room ${deleteConfirmDialog.room.number} has been deleted` });
+      setDeleteConfirmDialog({ open: false });
+    }
+  };
 
   // Get reservation for a room
   const getReservationForRoom = (room: Room): Reservation | undefined => {
@@ -416,8 +503,19 @@ export default function PMSRoomDashboardPage() {
             ))}
           </SelectContent>
         </Select>
-        <div className="ml-auto text-xs text-muted-foreground">
-          {stats.available}/{stats.total} available
+        <div className="flex items-center gap-2 ml-auto">
+          <span className="text-xs text-muted-foreground">
+            {stats.available}/{stats.total} available
+          </span>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setManageRoomsDialog(true)}
+            className="h-9"
+          >
+            <Settings2 className="h-4 w-4 mr-1" />
+            Manage Rooms
+          </Button>
         </div>
       </div>
 
@@ -732,6 +830,218 @@ export default function PMSRoomDashboardPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCheckInDialog({ open: false })}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Rooms Dialog */}
+      <Dialog open={manageRoomsDialog} onOpenChange={setManageRoomsDialog}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings2 className="h-5 w-5" />
+              Manage Rooms
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-muted-foreground">
+                Total {rooms.length} rooms configured
+              </p>
+              <Button onClick={openNewRoom} size="sm">
+                <PlusCircle className="h-4 w-4 mr-1" />
+                Add Room
+              </Button>
+            </div>
+            
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="text-left p-3 font-medium">Room #</th>
+                    <th className="text-left p-3 font-medium">Floor</th>
+                    <th className="text-left p-3 font-medium">Type</th>
+                    <th className="text-left p-3 font-medium">Status</th>
+                    <th className="text-left p-3 font-medium">Rate</th>
+                    <th className="text-left p-3 font-medium">Capacity</th>
+                    <th className="text-right p-3 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {rooms.map(room => (
+                    <tr key={room.id} className="hover:bg-muted/50">
+                      <td className="p-3 font-semibold">{room.number}</td>
+                      <td className="p-3">{room.floor}</td>
+                      <td className="p-3 capitalize">{roomTypeLabels[room.type] || room.type}</td>
+                      <td className="p-3">
+                        <Badge 
+                          variant="outline" 
+                          className={cn(
+                            "capitalize text-xs",
+                            room.status === 'available' && "border-emerald-500 text-emerald-600",
+                            room.status === 'occupied' && "border-sky-500 text-sky-600",
+                            room.status === 'reserved' && "border-amber-500 text-amber-600",
+                            room.status === 'maintenance' && "border-rose-500 text-rose-600",
+                            room.status === 'cleaning' && "border-violet-500 text-violet-600",
+                          )}
+                        >
+                          {room.status}
+                        </Badge>
+                      </td>
+                      <td className="p-3">₹{room.baseRate}</td>
+                      <td className="p-3">{room.maxOccupancy}</td>
+                      <td className="p-3 text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={() => openEditRoom(room)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => setDeleteConfirmDialog({ open: true, room })}
+                          disabled={room.status === 'occupied'}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setManageRoomsDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Room Form Dialog */}
+      <Dialog open={roomFormDialog.open} onOpenChange={(open) => setRoomFormDialog({ open })}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {roomFormDialog.room ? `Edit Room ${roomFormDialog.room.number}` : 'Add New Room'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Room Number *</Label>
+                <Input
+                  placeholder="e.g., 101"
+                  value={roomForm.number}
+                  onChange={(e) => setRoomForm(f => ({ ...f, number: e.target.value }))}
+                  disabled={!!roomFormDialog.room}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Floor</Label>
+                <Select 
+                  value={roomForm.floor.toString()} 
+                  onValueChange={(v) => setRoomForm(f => ({ ...f, floor: parseInt(v) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(f => (
+                      <SelectItem key={f} value={f.toString()}>Floor {f}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Room Type</Label>
+                <Select 
+                  value={roomForm.type} 
+                  onValueChange={(v: Room['type']) => setRoomForm(f => ({ ...f, type: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="deluxe">Deluxe</SelectItem>
+                    <SelectItem value="suite">Suite</SelectItem>
+                    <SelectItem value="executive">Executive</SelectItem>
+                    <SelectItem value="presidential">Presidential</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select 
+                  value={roomForm.status} 
+                  onValueChange={(v: Room['status']) => setRoomForm(f => ({ ...f, status: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="available">Available</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="cleaning">Cleaning</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Base Rate (₹)</Label>
+                <Input
+                  type="number"
+                  value={roomForm.baseRate}
+                  onChange={(e) => setRoomForm(f => ({ ...f, baseRate: parseInt(e.target.value) || 0 }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Max Occupancy</Label>
+                <Input
+                  type="number"
+                  value={roomForm.maxOccupancy}
+                  onChange={(e) => setRoomForm(f => ({ ...f, maxOccupancy: parseInt(e.target.value) || 1 }))}
+                  min={1}
+                  max={10}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRoomFormDialog({ open: false })}>Cancel</Button>
+            <Button onClick={handleSaveRoom}>
+              {roomFormDialog.room ? 'Update Room' : 'Add Room'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmDialog.open} onOpenChange={(open) => setDeleteConfirmDialog({ open })}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Room</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>Are you sure you want to delete Room <strong>{deleteConfirmDialog.room?.number}</strong>?</p>
+            <p className="text-sm text-muted-foreground mt-2">This action cannot be undone.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirmDialog({ open: false })}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteRoom}>Delete</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

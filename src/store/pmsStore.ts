@@ -155,6 +155,9 @@ interface PMSState {
   assignRoom: (reservationId: string, roomId: string) => void;
   
   // Rooms
+  addRoom: (room: Omit<Room, 'id'>) => Room;
+  updateRoom: (id: string, data: Partial<Room>) => void;
+  deleteRoom: (id: string) => void;
   updateRoomStatus: (id: string, status: Room['status']) => void;
   
   // Housekeeping
@@ -295,6 +298,27 @@ export const usePMSStore = create<PMSState>((set, get) => {
         reservations: state.reservations.map(r => 
           r.id === reservationId ? { ...r, roomId, room, updatedAt: new Date() } : r
         ),
+      }));
+    },
+    
+    addRoom: (roomData) => {
+      const newRoom: Room = {
+        id: `room-${Date.now()}`,
+        ...roomData,
+      };
+      set(state => ({ rooms: [...state.rooms, newRoom] }));
+      return newRoom;
+    },
+    
+    updateRoom: (id, data) => {
+      set(state => ({
+        rooms: state.rooms.map(r => r.id === id ? { ...r, ...data } : r),
+      }));
+    },
+    
+    deleteRoom: (id) => {
+      set(state => ({
+        rooms: state.rooms.filter(r => r.id !== id),
       }));
     },
     
