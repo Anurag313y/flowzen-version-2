@@ -55,7 +55,7 @@ export interface Reservation {
   children: number;
   status: ReservationStatus;
   paymentStatus: PaymentStatus;
-  source: 'direct' | 'booking' | 'expedia' | 'airbnb' | 'phone' | 'walk-in';
+  source: 'direct' | 'booking' | 'expedia' | 'airbnb' | 'phone' | 'walk-in' | 'makemytrip' | 'goibibo';
   ratePerNight: number;
   totalAmount: number;
   paidAmount: number;
