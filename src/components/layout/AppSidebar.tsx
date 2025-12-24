@@ -128,11 +128,11 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       >
         <CollapsibleTrigger
           className={cn(
-            "flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors rounded-lg mx-2",
+            "flex items-center justify-between w-full px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-colors rounded-lg",
             hasActiveItem 
               ? "text-sidebar-primary bg-sidebar-accent/50" 
               : "text-sidebar-muted hover:bg-sidebar-accent/30 hover:text-sidebar-foreground",
-            collapsed && "justify-center px-2 mx-1"
+            collapsed && "justify-center px-2"
           )}
         >
           {!collapsed && <span>{section.title}</span>}
@@ -212,7 +212,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       </div>
 
       {/* Navigation */}
-      <div className="py-3 overflow-y-auto h-[calc(100vh-120px)]">
+      <div className="py-3 overflow-y-auto overflow-x-hidden h-[calc(100vh-120px)]">
         {sections.map(section => renderSection(section))}
       </div>
 

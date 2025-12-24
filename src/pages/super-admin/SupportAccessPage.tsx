@@ -52,20 +52,22 @@ export default function SupportAccessPage() {
   const [expandedClients, setExpandedClients] = useState<string[]>([]);
 
   const filteredClients = useMemo(() => {
-    if (!searchQuery.trim()) return clients.filter(c => c.status === 'active');
+    const activeClients = clients.filter(c => c.status === 'active');
+    if (!searchQuery.trim()) return activeClients;
     const query = searchQuery.toLowerCase();
-    return clients.filter(c => 
-      c.status === 'active' && (
-        c.businessName.toLowerCase().includes(query) ||
-        c.ownerName.toLowerCase().includes(query) ||
-        c.city.toLowerCase().includes(query) ||
-        c.id.toLowerCase().includes(query) ||
-        c.branches.some(b => 
-          b.name.toLowerCase().includes(query) ||
-          b.city.toLowerCase().includes(query)
+    return activeClients.filter(c => {
+      const branches = c.branches || [];
+      return (
+        c.businessName?.toLowerCase().includes(query) ||
+        c.ownerName?.toLowerCase().includes(query) ||
+        c.city?.toLowerCase().includes(query) ||
+        c.id?.toLowerCase().includes(query) ||
+        branches.some(b => 
+          b.name?.toLowerCase().includes(query) ||
+          b.city?.toLowerCase().includes(query)
         )
-      )
-    );
+      );
+    });
   }, [clients, searchQuery]);
 
   const selectedClientData = useMemo(() => 
@@ -74,7 +76,7 @@ export default function SupportAccessPage() {
   );
 
   const selectedBranchData = useMemo(() => 
-    selectedClientData?.branches.find(b => b.id === selectedBranch),
+    selectedClientData?.branches?.find(b => b.id === selectedBranch),
     [selectedClientData, selectedBranch]
   );
 
@@ -204,7 +206,7 @@ export default function SupportAccessPage() {
                               {client.businessType.charAt(0).toUpperCase() + client.businessType.slice(1)}
                             </Badge>
                             <Badge variant="outline" className="text-slate-600">
-                              {client.branches.filter(b => b.status === 'active').length} branches
+                              {(client.branches || []).filter(b => b.status === 'active').length} branches
                             </Badge>
                             <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${expandedClients.includes(client.id) ? 'rotate-180' : ''}`} />
                           </div>
@@ -213,7 +215,7 @@ export default function SupportAccessPage() {
                       <CollapsibleContent>
                         <div className="bg-slate-50 px-4 pb-4">
                           <div className="grid gap-2">
-                            {client.branches.filter(b => b.status === 'active').map((branch) => (
+                            {(client.branches || []).filter(b => b.status === 'active').map((branch) => (
                               <div
                                 key={branch.id}
                                 onClick={() => handleSelectBranch(client.id, branch.id)}
