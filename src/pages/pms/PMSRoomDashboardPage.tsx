@@ -7,6 +7,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePMSStore } from '@/store/pmsStore';
 import { toast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format, differenceInDays } from 'date-fns';
 import { 
   CalendarPlus, 
   UtensilsCrossed, 
@@ -20,7 +25,13 @@ import {
   Filter,
   BedDouble,
   Users,
-  Wrench
+  Wrench,
+  CalendarIcon,
+  Mail,
+  MapPin,
+  CreditCard,
+  Minus,
+  Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Room, Reservation, Guest } from '@/types/pms';
@@ -190,7 +201,16 @@ export default function PMSRoomDashboardPage() {
   const [bookingForm, setBookingForm] = React.useState({
     guestName: '',
     phone: '',
-    nights: 1,
+    email: '',
+    checkIn: new Date(),
+    checkOut: new Date(Date.now() + 86400000),
+    adults: 2,
+    children: 0,
+    source: 'walk-in',
+    idType: '',
+    idNumber: '',
+    address: '',
+    specialRequests: '',
   });
 
   // Get reservation for a room
@@ -257,9 +277,12 @@ export default function PMSRoomDashboardPage() {
     }
   };
 
+  // Calculate nights from dates
+  const nights = Math.max(1, differenceInDays(bookingForm.checkOut, bookingForm.checkIn));
+
   // Handle booking submission
   const handleBooking = () => {
-    if (!bookingDialog.room || !bookingForm.guestName) return;
+    if (!bookingDialog.room || !bookingForm.guestName || !bookingForm.phone) return;
     
     const [firstName, ...lastNameParts] = bookingForm.guestName.split(' ');
     const lastName = lastNameParts.join(' ') || firstName;
@@ -268,8 +291,11 @@ export default function PMSRoomDashboardPage() {
       id: `guest-${Date.now()}`,
       firstName,
       lastName,
-      email: '',
+      email: bookingForm.email,
       phone: bookingForm.phone,
+      address: bookingForm.address,
+      idType: bookingForm.idType as any,
+      idNumber: bookingForm.idNumber,
       totalStays: 0,
       totalSpent: 0,
       createdAt: new Date(),
@@ -281,12 +307,15 @@ export default function PMSRoomDashboardPage() {
       roomId: bookingDialog.room.id,
       room: bookingDialog.room,
       roomType: bookingDialog.room.type,
-      checkIn: new Date(),
-      nights: bookingForm.nights,
-      adults: 1,
-      children: 0,
+      checkIn: bookingForm.checkIn,
+      checkOut: bookingForm.checkOut,
+      nights,
+      adults: bookingForm.adults,
+      children: bookingForm.children,
+      source: bookingForm.source as any,
       ratePerNight: bookingDialog.room.baseRate,
-      totalAmount: bookingDialog.room.baseRate * bookingForm.nights,
+      totalAmount: bookingDialog.room.baseRate * nights,
+      specialRequests: bookingForm.specialRequests,
     });
     
     checkIn(`res-${Date.now()}`, bookingDialog.room.id);
@@ -297,7 +326,20 @@ export default function PMSRoomDashboardPage() {
     });
     
     setBookingDialog({ open: false });
-    setBookingForm({ guestName: '', phone: '', nights: 1 });
+    setBookingForm({
+      guestName: '',
+      phone: '',
+      email: '',
+      checkIn: new Date(),
+      checkOut: new Date(Date.now() + 86400000),
+      adults: 2,
+      children: 0,
+      source: 'walk-in',
+      idType: '',
+      idNumber: '',
+      address: '',
+      specialRequests: '',
+    });
   };
 
   // Summary stats
@@ -310,7 +352,7 @@ export default function PMSRoomDashboardPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -319,8 +361,8 @@ export default function PMSRoomDashboardPage() {
         </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-5 gap-3">
+      {/* Stats Row - Responsive */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
         <StatCard icon={<BedDouble />} label="Total" value={stats.total} color="text-foreground" />
         <StatCard icon={<BedDouble />} label="Available" value={stats.available} color="text-emerald-600" />
         <StatCard icon={<Users />} label="Occupied" value={stats.occupied} color="text-blue-600" />
@@ -384,54 +426,227 @@ export default function PMSRoomDashboardPage() {
         </div>
       )}
 
-      {/* Booking Dialog */}
+      {/* Booking Dialog - Single Step */}
       <Dialog open={bookingDialog.open} onOpenChange={(open) => setBookingDialog({ open })}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Quick Booking - Room {bookingDialog.room?.number}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <BedDouble className="h-5 w-5" />
+              New Booking - Room {bookingDialog.room?.number} 
+              <Badge variant="outline" className="ml-2 capitalize">{bookingDialog.room?.type}</Badge>
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Guest Name</label>
-              <Input
-                placeholder="Enter guest name"
-                value={bookingForm.guestName}
-                onChange={(e) => setBookingForm(f => ({ ...f, guestName: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Phone Number</label>
-              <Input
-                placeholder="Enter phone number"
-                value={bookingForm.phone}
-                onChange={(e) => setBookingForm(f => ({ ...f, phone: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Number of Nights</label>
-              <Input
-                type="number"
-                min={1}
-                value={bookingForm.nights}
-                onChange={(e) => setBookingForm(f => ({ ...f, nights: parseInt(e.target.value) || 1 }))}
-              />
-            </div>
-            {bookingDialog.room && (
-              <div className="p-3 bg-muted rounded-lg">
-                <div className="flex justify-between text-sm">
-                  <span>Rate per night:</span>
-                  <span className="font-medium">₹{bookingDialog.room.baseRate}</span>
+          
+          <div className="grid gap-6 py-4">
+            {/* Guest Information */}
+            <div className="space-y-4">
+              <h3 className="font-semibold flex items-center gap-2 text-sm text-muted-foreground uppercase tracking-wide">
+                <User className="h-4 w-4" /> Guest Information
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Full Name *</Label>
+                  <Input
+                    placeholder="Guest full name"
+                    value={bookingForm.guestName}
+                    onChange={(e) => setBookingForm(f => ({ ...f, guestName: e.target.value }))}
+                  />
                 </div>
-                <div className="flex justify-between text-sm font-semibold mt-1">
-                  <span>Total:</span>
-                  <span>₹{bookingDialog.room.baseRate * bookingForm.nights}</span>
+                <div className="space-y-2">
+                  <Label>Mobile Number *</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      placeholder="+91 98765 43210"
+                      value={bookingForm.phone}
+                      onChange={(e) => setBookingForm(f => ({ ...f, phone: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      type="email"
+                      placeholder="guest@email.com"
+                      value={bookingForm.email}
+                      onChange={(e) => setBookingForm(f => ({ ...f, email: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Address</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      placeholder="City, State"
+                      value={bookingForm.address}
+                      onChange={(e) => setBookingForm(f => ({ ...f, address: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>ID Type</Label>
+                  <Select value={bookingForm.idType} onValueChange={(v) => setBookingForm(f => ({ ...f, idType: v }))}>
+                    <SelectTrigger>
+                      <CreditCard className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <SelectValue placeholder="Select ID type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="aadhaar">Aadhaar Card</SelectItem>
+                      <SelectItem value="passport">Passport</SelectItem>
+                      <SelectItem value="driving">Driving License</SelectItem>
+                      <SelectItem value="voter">Voter ID</SelectItem>
+                      <SelectItem value="pan">PAN Card</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>ID Number</Label>
+                  <Input
+                    placeholder="ID number"
+                    value={bookingForm.idNumber}
+                    onChange={(e) => setBookingForm(f => ({ ...f, idNumber: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Stay Details */}
+            <div className="space-y-4">
+              <h3 className="font-semibold flex items-center gap-2 text-sm text-muted-foreground uppercase tracking-wide">
+                <CalendarIcon className="h-4 w-4" /> Stay Details
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Check-in Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(bookingForm.checkIn, 'PPP')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={bookingForm.checkIn}
+                        onSelect={(d) => d && setBookingForm(f => ({ ...f, checkIn: d }))}
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2">
+                  <Label>Check-out Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(bookingForm.checkOut, 'PPP')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={bookingForm.checkOut}
+                        onSelect={(d) => d && setBookingForm(f => ({ ...f, checkOut: d }))}
+                        disabled={(d) => d <= bookingForm.checkIn}
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2">
+                  <Label>Adults</Label>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" size="icon" onClick={() => setBookingForm(f => ({ ...f, adults: Math.max(1, f.adults - 1) }))}>
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="w-12 text-center font-medium">{bookingForm.adults}</span>
+                    <Button type="button" variant="outline" size="icon" onClick={() => setBookingForm(f => ({ ...f, adults: Math.min(10, f.adults + 1) }))}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Children</Label>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" size="icon" onClick={() => setBookingForm(f => ({ ...f, children: Math.max(0, f.children - 1) }))}>
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="w-12 text-center font-medium">{bookingForm.children}</span>
+                    <Button type="button" variant="outline" size="icon" onClick={() => setBookingForm(f => ({ ...f, children: Math.min(10, f.children + 1) }))}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label>Booking Source</Label>
+                  <Select value={bookingForm.source} onValueChange={(v) => setBookingForm(f => ({ ...f, source: v }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="walk-in">Walk-in</SelectItem>
+                      <SelectItem value="phone">Phone</SelectItem>
+                      <SelectItem value="direct">Direct (Website)</SelectItem>
+                      <SelectItem value="booking">Booking.com</SelectItem>
+                      <SelectItem value="makemytrip">MakeMyTrip</SelectItem>
+                      <SelectItem value="goibibo">Goibibo</SelectItem>
+                      <SelectItem value="airbnb">Airbnb</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Special Requests */}
+            <div className="space-y-2">
+              <Label>Special Requests / Notes</Label>
+              <Textarea
+                placeholder="Any special requests..."
+                value={bookingForm.specialRequests}
+                onChange={(e) => setBookingForm(f => ({ ...f, specialRequests: e.target.value }))}
+                rows={2}
+              />
+            </div>
+
+            {/* Summary Card */}
+            {bookingDialog.room && (
+              <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Room</span>
+                    <p className="font-semibold">{bookingDialog.room.number} ({bookingDialog.room.type})</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Duration</span>
+                    <p className="font-semibold">{nights} night(s)</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Rate/Night</span>
+                    <p className="font-semibold">₹{bookingDialog.room.baseRate}</p>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mt-4 pt-4 border-t border-primary/20">
+                  <span className="font-medium">Total Amount</span>
+                  <span className="text-2xl font-bold text-primary">₹{(bookingDialog.room.baseRate * nights).toLocaleString()}</span>
                 </div>
               </div>
             )}
           </div>
+          
           <DialogFooter>
             <Button variant="outline" onClick={() => setBookingDialog({ open: false })}>Cancel</Button>
-            <Button onClick={handleBooking} disabled={!bookingForm.guestName}>Check In</Button>
+            <Button onClick={handleBooking} disabled={!bookingForm.guestName || !bookingForm.phone}>
+              <LogIn className="h-4 w-4 mr-2" />
+              Check In Guest
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
