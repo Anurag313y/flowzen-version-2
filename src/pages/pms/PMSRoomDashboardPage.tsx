@@ -46,11 +46,11 @@ const roomStatusColors: Record<string, { bg: string; text: string; border: strin
 };
 
 const roomTypeLabels: Record<string, string> = {
-  standard: 'STD',
-  deluxe: 'DLX',
-  suite: 'STE',
-  executive: 'EXE',
-  presidential: 'PRE',
+  standard: 'Standard',
+  deluxe: 'Deluxe',
+  suite: 'Suite',
+  executive: 'Executive',
+  presidential: 'Presidential',
 };
 
 // Color legend component
@@ -87,81 +87,88 @@ function RoomCard({ room, reservation, onAction }: RoomCardProps) {
   
   return (
     <Card className={cn(
-      "relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5",
+      "relative transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5",
       colors.bg,
       "border-0"
     )}>
-      <CardContent className="p-2">
-        {/* Room Number & Type Header */}
-        <div className="flex items-center justify-between mb-1">
-          <span className={cn("text-lg font-bold", colors.text)}>
-            {room.number}
-          </span>
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-white/20 text-white border-0">
-            {roomTypeLabels[room.type] || room.type.toUpperCase()}
-          </Badge>
-        </div>
-
-        {/* Guest Info - Compact */}
-        {isOccupied && reservation ? (
-          <div className="mb-2 space-y-0.5">
-            <div className="flex items-center gap-1 text-xs">
-              <User className="h-3 w-3 text-white/80" />
-              <span className="font-medium text-white truncate text-[11px]">
-                {reservation.guest.firstName} {reservation.guest.lastName}
-              </span>
-            </div>
-            <div className="flex items-center gap-1 text-[10px] text-white/70">
-              <Phone className="h-2.5 w-2.5" />
-              <span>{reservation.guest.phone}</span>
-            </div>
-          </div>
-        ) : (
-          <div className="h-8 flex items-center">
-            <span className={cn("text-xs font-medium capitalize", colors.text)}>
-              {room.status === 'cleaning' ? 'Cleaning' : room.status}
+      <CardContent className="p-1.5">
+        {/* Header: Room Number, Guest/Status, Room Type */}
+        <div className="space-y-0.5 mb-1.5">
+          {/* Room Number */}
+          <div className="text-center">
+            <span className={cn("text-base font-bold", colors.text)}>
+              {room.number}
             </span>
           </div>
-        )}
+          
+          {/* Guest Name & Phone OR Status */}
+          {isOccupied && reservation ? (
+            <div className="text-center space-y-0">
+              <div className={cn("text-[10px] font-medium truncate", colors.text)}>
+                {reservation.guest.firstName} {reservation.guest.lastName}
+              </div>
+              <div className="text-[9px] text-white/80">
+                {reservation.guest.phone}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <span className={cn("text-[10px] font-medium capitalize", colors.text)}>
+                {room.status}
+              </span>
+            </div>
+          )}
+          
+          {/* Room Type - Full Name */}
+          <div className="text-center">
+            <span className="text-[9px] text-white/70 uppercase tracking-wide">
+              {roomTypeLabels[room.type] || room.type}
+            </span>
+          </div>
+        </div>
 
-        {/* Action Icons - 2 Rows */}
-        <div className="grid grid-cols-3 gap-0.5 pt-1 border-t border-white/20">
-          <ActionButton
-            icon={<CalendarPlus className="h-3 w-3" />}
-            label="Book"
-            onClick={() => onAction('book', room, reservation)}
-            disabled={room.status === 'maintenance'}
-          />
-          <ActionButton
-            icon={<UtensilsCrossed className="h-3 w-3" />}
-            label="KOT"
-            onClick={() => onAction('kot', room, reservation)}
-            disabled={!isOccupied}
-          />
-          <ActionButton
-            icon={<LogIn className="h-3 w-3" />}
-            label="In"
-            onClick={() => onAction('checkin', room, reservation)}
-            disabled={room.status !== 'reserved' && room.status !== 'available'}
-          />
-          <ActionButton
-            icon={<LogOut className="h-3 w-3" />}
-            label="Out"
-            onClick={() => onAction('checkout', room, reservation)}
-            disabled={!isOccupied}
-          />
-          <ActionButton
-            icon={<Receipt className="h-3 w-3" />}
-            label="Bill"
-            onClick={() => onAction('bill', room, reservation)}
-            disabled={!isOccupied}
-          />
-          <ActionButton
-            icon={<Sparkles className="h-3 w-3" />}
-            label="Clean"
-            onClick={() => onAction('clean', room, reservation)}
-            disabled={room.housekeepingStatus === 'clean'}
-          />
+        {/* Action Icons - 2 Rows of 3 */}
+        <div className="border-t border-white/20 pt-1">
+          <div className="grid grid-cols-3 gap-px">
+            <ActionButton
+              icon={<CalendarPlus className="h-3 w-3" />}
+              label="Book"
+              onClick={() => onAction('book', room, reservation)}
+              disabled={room.status === 'maintenance'}
+            />
+            <ActionButton
+              icon={<UtensilsCrossed className="h-3 w-3" />}
+              label="KOT"
+              onClick={() => onAction('kot', room, reservation)}
+              disabled={!isOccupied}
+            />
+            <ActionButton
+              icon={<LogIn className="h-3 w-3" />}
+              label="In"
+              onClick={() => onAction('checkin', room, reservation)}
+              disabled={room.status !== 'reserved' && room.status !== 'available'}
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-px">
+            <ActionButton
+              icon={<LogOut className="h-3 w-3" />}
+              label="Out"
+              onClick={() => onAction('checkout', room, reservation)}
+              disabled={!isOccupied}
+            />
+            <ActionButton
+              icon={<Receipt className="h-3 w-3" />}
+              label="Bill"
+              onClick={() => onAction('bill', room, reservation)}
+              disabled={!isOccupied}
+            />
+            <ActionButton
+              icon={<Sparkles className="h-3 w-3" />}
+              label="Clean"
+              onClick={() => onAction('clean', room, reservation)}
+              disabled={room.housekeepingStatus === 'clean'}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
