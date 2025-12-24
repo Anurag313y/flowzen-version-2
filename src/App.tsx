@@ -50,6 +50,12 @@ import { SuperAdminLayout } from "./components/super-admin/SuperAdminLayout";
 import { SuperAdminProtectedRoute } from "./components/super-admin/SuperAdminProtectedRoute";
 import { SupportModeWrapper } from "./components/support/SupportModeWrapper";
 
+// Hotel PMS Pages
+import PMSDashboardPage from "./pages/pms/PMSDashboardPage";
+import PMSReservationsPage from "./pages/pms/PMSReservationsPage";
+import PMSRoomRackPage from "./pages/pms/PMSRoomRackPage";
+import PMSFrontDeskPage from "./pages/pms/PMSFrontDeskPage";
+
 const queryClient = new QueryClient();
 
 function AppRoutes() {
@@ -141,6 +147,12 @@ function AppRoutes() {
         <Route path="/configurations" element={<ConfigurationsPage />} />
         <Route path="/subscription" element={<SubscriptionManagementPage />} />
         <Route path="/audit" element={<AuditPage />} />
+        
+        {/* Hotel PMS Routes */}
+        <Route path="/pms" element={<PMSDashboardPage />} />
+        <Route path="/pms/reservations" element={<PMSReservationsPage />} />
+        <Route path="/pms/room-rack" element={<PMSRoomRackPage />} />
+        <Route path="/pms/front-desk" element={<PMSFrontDeskPage />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
