@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSuperAdminStore, Client } from '@/store/superAdminStore';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { Switch } from '@/components/ui/switch';
 import {
   Search,
@@ -50,6 +55,10 @@ import {
   UtensilsCrossed,
   Building2,
   Plus,
+  ChevronDown,
+  ChevronRight,
+  MapPin,
+  Star,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -63,8 +72,21 @@ export default function ClientListPage() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set());
 
   const today = new Date();
+
+  const toggleExpanded = (clientId: string) => {
+    setExpandedClients(prev => {
+      const next = new Set(prev);
+      if (next.has(clientId)) {
+        next.delete(clientId);
+      } else {
+        next.add(clientId);
+      }
+      return next;
+    });
+  };
 
   const getDaysLeft = (expiryDate: string) => {
     const expiry = new Date(expiryDate);
@@ -195,14 +217,14 @@ export default function ClientListPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-8"></TableHead>
                   <TableHead>Client ID</TableHead>
                   <TableHead>Business</TableHead>
+                  <TableHead>Branches</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>City</TableHead>
-                  <TableHead>Services</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Days Left</TableHead>
-                  <TableHead>Payment</TableHead>
                   <TableHead className="text-center">POS</TableHead>
                   <TableHead className="text-center">PMS</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -218,122 +240,160 @@ export default function ClientListPage() {
                 ) : (
                   filteredClients.map((client) => {
                     const daysLeft = getDaysLeft(client.expiryDate);
+                    const isExpanded = expandedClients.has(client.id);
+                    const branchCount = client.branches?.length || 0;
+                    
                     return (
-                      <TableRow key={client.id}>
-                        <TableCell className="font-mono text-sm">{client.id}</TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{client.businessName}</p>
-                            <p className="text-sm text-muted-foreground">{client.ownerName}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getBusinessIcon(client.businessType)}
-                            <span className="capitalize">{client.businessType}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{client.city}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            {client.services.includes('pos') && (
-                              <Badge variant="outline" className="text-xs">POS</Badge>
-                            )}
-                            {client.services.includes('pms') && (
-                              <Badge variant="outline" className="text-xs">PMS</Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={getStatusColor(client.status)}>
-                            {client.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={
-                              daysLeft <= 0
-                                ? 'bg-destructive/10 text-destructive border-destructive/30'
-                                : daysLeft <= 10
-                                ? 'bg-warning/10 text-warning border-warning/30'
-                                : 'bg-success/10 text-success border-success/30'
-                            }
-                          >
-                            {daysLeft <= 0 ? 'Expired' : `${daysLeft} days`}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={
-                              client.paymentStatus === 'paid'
-                                ? 'bg-success/10 text-success border-success/30'
-                                : 'bg-destructive/10 text-destructive border-destructive/30'
-                            }
-                          >
-                            {client.paymentStatus}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Switch
-                            checked={client.posEnabled}
-                            onCheckedChange={(checked) => handleToggleService(client.id, 'pos', checked)}
-                            disabled={!client.services.includes('pos') || client.status === 'suspended'}
-                          />
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Switch
-                            checked={client.pmsEnabled}
-                            onCheckedChange={(checked) => handleToggleService(client.id, 'pms', checked)}
-                            disabled={!client.services.includes('pms') || client.status === 'suspended'}
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => navigate(`/super-admin/clients/${client.id}`)}>
-                                <Eye className="h-4 w-4 mr-2" />
-                                View
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => navigate(`/super-admin/clients/${client.id}/edit`)}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              {client.status === 'suspended' ? (
-                                <DropdownMenuItem onClick={() => handleResume(client)}>
-                                  <Play className="h-4 w-4 mr-2" />
-                                  Resume
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem onClick={() => handleSuspend(client)}>
-                                  <Pause className="h-4 w-4 mr-2" />
-                                  Suspend
-                                </DropdownMenuItem>
+                      <Collapsible key={client.id} open={isExpanded} onOpenChange={() => toggleExpanded(client.id)} asChild>
+                        <>
+                          <TableRow className="group">
+                            <TableCell>
+                              {branchCount > 0 && (
+                                <CollapsibleTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                  </Button>
+                                </CollapsibleTrigger>
                               )}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => {
-                                  setClientToDelete(client);
-                                  setDeleteDialogOpen(true);
-                                }}
+                            </TableCell>
+                            <TableCell className="font-mono text-sm">{client.id}</TableCell>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">{client.businessName}</p>
+                                <p className="text-sm text-muted-foreground">{client.ownerName}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="font-normal">
+                                <Building2 className="h-3 w-3 mr-1" />
+                                {branchCount} {branchCount === 1 ? 'branch' : 'branches'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {getBusinessIcon(client.businessType)}
+                                <span className="capitalize">{client.businessType}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{client.city}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={getStatusColor(client.status)}>
+                                {client.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={
+                                  daysLeft <= 0
+                                    ? 'bg-destructive/10 text-destructive border-destructive/30'
+                                    : daysLeft <= 10
+                                    ? 'bg-warning/10 text-warning border-warning/30'
+                                    : 'bg-success/10 text-success border-success/30'
+                                }
                               >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
+                                {daysLeft <= 0 ? 'Expired' : `${daysLeft} days`}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Switch
+                                checked={client.posEnabled}
+                                onCheckedChange={(checked) => handleToggleService(client.id, 'pos', checked)}
+                                disabled={!client.services.includes('pos') || client.status === 'suspended'}
+                              />
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Switch
+                                checked={client.pmsEnabled}
+                                onCheckedChange={(checked) => handleToggleService(client.id, 'pms', checked)}
+                                disabled={!client.services.includes('pms') || client.status === 'suspended'}
+                              />
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => navigate(`/super-admin/clients/${client.id}`)}>
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => navigate(`/super-admin/clients/${client.id}/edit`)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  {client.status === 'suspended' ? (
+                                    <DropdownMenuItem onClick={() => handleResume(client)}>
+                                      <Play className="h-4 w-4 mr-2" />
+                                      Resume
+                                    </DropdownMenuItem>
+                                  ) : (
+                                    <DropdownMenuItem onClick={() => handleSuspend(client)}>
+                                      <Pause className="h-4 w-4 mr-2" />
+                                      Suspend
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => {
+                                      setClientToDelete(client);
+                                      setDeleteDialogOpen(true);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                          {branchCount > 0 && (
+                            <CollapsibleContent asChild>
+                              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                                <TableCell colSpan={11} className="p-0">
+                                  <div className="px-6 py-4">
+                                    <p className="text-sm font-medium text-muted-foreground mb-3">All Branches</p>
+                                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                                      {client.branches.map((branch) => (
+                                        <div
+                                          key={branch.id}
+                                          className="flex items-start gap-3 p-3 bg-background rounded-lg border"
+                                        >
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                              <p className="font-medium text-sm truncate">{branch.name}</p>
+                                              {branch.isMain && (
+                                                <Star className="h-3 w-3 text-primary fill-primary flex-shrink-0" />
+                                              )}
+                                            </div>
+                                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                              <MapPin className="h-3 w-3" />
+                                              <span>{branch.city}, {branch.state}</span>
+                                            </div>
+                                            <Badge
+                                              variant="outline"
+                                              className={`mt-2 text-xs ${branch.status === 'active' ? 'bg-success/10 text-success border-success/30' : 'bg-muted text-muted-foreground'}`}
+                                            >
+                                              {branch.status}
+                                            </Badge>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            </CollapsibleContent>
+                          )}
+                        </>
+                      </Collapsible>
                     );
                   })
                 )}

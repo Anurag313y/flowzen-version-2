@@ -8,6 +8,19 @@ export interface SuperAdminUser {
   role: 'super_admin';
 }
 
+export interface Branch {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  phone: string;
+  email: string;
+  isMain: boolean;
+  status: 'active' | 'inactive';
+  createdAt: string;
+}
+
 export interface Client {
   id: string;
   businessType: 'restaurant' | 'hotel' | 'both';
@@ -31,6 +44,7 @@ export interface Client {
   posEnabled: boolean;
   pmsEnabled: boolean;
   notes?: string;
+  branches: Branch[];
   createdAt: string;
   updatedAt: string;
 }
@@ -77,7 +91,6 @@ export const SUPER_ADMIN_CREDENTIALS = {
 
 // Demo data
 const generateDemoClients = (): Client[] => {
-  const now = new Date();
   return [
     {
       id: 'CLT001',
@@ -99,6 +112,44 @@ const generateDemoClients = (): Client[] => {
       status: 'active',
       posEnabled: true,
       pmsEnabled: false,
+      branches: [
+        {
+          id: 'BR001-1',
+          name: 'Koramangala Main',
+          address: '123 MG Road, Koramangala',
+          city: 'Bangalore',
+          state: 'Karnataka',
+          phone: '+91 98765 43210',
+          email: 'koramangala@spicegarden.com',
+          isMain: true,
+          status: 'active',
+          createdAt: '2024-01-15',
+        },
+        {
+          id: 'BR001-2',
+          name: 'Indiranagar Outlet',
+          address: '456 12th Main, Indiranagar',
+          city: 'Bangalore',
+          state: 'Karnataka',
+          phone: '+91 98765 43211',
+          email: 'indiranagar@spicegarden.com',
+          isMain: false,
+          status: 'active',
+          createdAt: '2024-03-20',
+        },
+        {
+          id: 'BR001-3',
+          name: 'Whitefield Branch',
+          address: '789 ITPL Main Road',
+          city: 'Bangalore',
+          state: 'Karnataka',
+          phone: '+91 98765 43212',
+          email: 'whitefield@spicegarden.com',
+          isMain: false,
+          status: 'active',
+          createdAt: '2024-06-10',
+        },
+      ],
       createdAt: '2024-01-10',
       updatedAt: '2024-01-15',
     },
@@ -122,6 +173,32 @@ const generateDemoClients = (): Client[] => {
       status: 'active',
       posEnabled: false,
       pmsEnabled: true,
+      branches: [
+        {
+          id: 'BR002-1',
+          name: 'Mumbai Central',
+          address: '456 Lake View Road',
+          city: 'Mumbai',
+          state: 'Maharashtra',
+          phone: '+91 87654 32109',
+          email: 'mumbai@grandpalace.in',
+          isMain: true,
+          status: 'active',
+          createdAt: '2023-06-01',
+        },
+        {
+          id: 'BR002-2',
+          name: 'Pune Branch',
+          address: '123 FC Road, Shivajinagar',
+          city: 'Pune',
+          state: 'Maharashtra',
+          phone: '+91 87654 32110',
+          email: 'pune@grandpalace.in',
+          isMain: false,
+          status: 'active',
+          createdAt: '2024-02-15',
+        },
+      ],
       createdAt: '2023-05-20',
       updatedAt: '2023-06-01',
     },
@@ -145,6 +222,20 @@ const generateDemoClients = (): Client[] => {
       posEnabled: true,
       pmsEnabled: true,
       notes: 'Premium client - priority support',
+      branches: [
+        {
+          id: 'BR003-1',
+          name: 'Kovalam Resort',
+          address: '789 Beach Road, Kovalam',
+          city: 'Thiruvananthapuram',
+          state: 'Kerala',
+          phone: '+91 76543 21098',
+          email: 'kovalam@coastalbreeze.com',
+          isMain: true,
+          status: 'active',
+          createdAt: '2024-06-20',
+        },
+      ],
       createdAt: '2024-06-15',
       updatedAt: '2024-06-20',
     },
@@ -167,6 +258,32 @@ const generateDemoClients = (): Client[] => {
       status: 'active',
       posEnabled: true,
       pmsEnabled: false,
+      branches: [
+        {
+          id: 'BR004-1',
+          name: 'Indiranagar Main',
+          address: '321 Food Street, Indiranagar',
+          city: 'Bangalore',
+          state: 'Karnataka',
+          phone: '+91 65432 10987',
+          email: 'main@dragonwok.in',
+          isMain: true,
+          status: 'active',
+          createdAt: '2024-03-01',
+        },
+        {
+          id: 'BR004-2',
+          name: 'HSR Layout',
+          address: '567 Sector 2, HSR Layout',
+          city: 'Bangalore',
+          state: 'Karnataka',
+          phone: '+91 65432 10988',
+          email: 'hsr@dragonwok.in',
+          isMain: false,
+          status: 'active',
+          createdAt: '2024-07-15',
+        },
+      ],
       createdAt: '2024-02-25',
       updatedAt: '2024-03-01',
     },
@@ -189,6 +306,20 @@ const generateDemoClients = (): Client[] => {
       status: 'expired',
       posEnabled: false,
       pmsEnabled: false,
+      branches: [
+        {
+          id: 'BR005-1',
+          name: 'Shimla Main',
+          address: '555 Hill Station Road',
+          city: 'Shimla',
+          state: 'Himachal Pradesh',
+          phone: '+91 54321 09876',
+          email: 'shimla@mountainview.in',
+          isMain: true,
+          status: 'inactive',
+          createdAt: '2023-12-01',
+        },
+      ],
       createdAt: '2023-11-20',
       updatedAt: '2024-12-01',
     },
@@ -212,6 +343,44 @@ const generateDemoClients = (): Client[] => {
       posEnabled: false,
       pmsEnabled: false,
       notes: 'Suspended due to non-payment',
+      branches: [
+        {
+          id: 'BR006-1',
+          name: 'Connaught Place',
+          address: '888 Park Avenue',
+          city: 'Delhi',
+          state: 'Delhi',
+          phone: '+91 43210 98765',
+          email: 'cp@cafeitaliano.com',
+          isMain: true,
+          status: 'inactive',
+          createdAt: '2024-02-15',
+        },
+        {
+          id: 'BR006-2',
+          name: 'Hauz Khas',
+          address: '456 Village Complex',
+          city: 'Delhi',
+          state: 'Delhi',
+          phone: '+91 43210 98766',
+          email: 'hauzkhas@cafeitaliano.com',
+          isMain: false,
+          status: 'inactive',
+          createdAt: '2024-05-01',
+        },
+        {
+          id: 'BR006-3',
+          name: 'Gurgaon',
+          address: '789 Cyber Hub',
+          city: 'Gurgaon',
+          state: 'Haryana',
+          phone: '+91 43210 98767',
+          email: 'gurgaon@cafeitaliano.com',
+          isMain: false,
+          status: 'inactive',
+          createdAt: '2024-08-20',
+        },
+      ],
       createdAt: '2024-02-10',
       updatedAt: '2024-11-01',
     },
@@ -308,6 +477,11 @@ interface SuperAdminStore {
   toggleClientService: (id: string, service: 'pos' | 'pms', enabled: boolean) => void;
   renewSubscription: (id: string, plan: '1_year' | '3_year') => void;
   
+  // Branch actions
+  addBranch: (clientId: string, branch: Omit<Branch, 'id' | 'createdAt'>) => void;
+  updateBranch: (clientId: string, branchId: string, updates: Partial<Branch>) => void;
+  deleteBranch: (clientId: string, branchId: string) => void;
+  
   // Complaint actions
   updateComplaintStatus: (id: string, status: Complaint['status'], notes?: string) => void;
   
@@ -388,7 +562,14 @@ export const useSuperAdminStore = create<SuperAdminStore>()(
         const client = get().clients.find((c) => c.id === id);
         set((state) => ({
           clients: state.clients.map((c) =>
-            c.id === id ? { ...c, status: 'suspended', posEnabled: false, pmsEnabled: false, updatedAt: new Date().toISOString().split('T')[0] } : c
+            c.id === id ? { 
+              ...c, 
+              status: 'suspended', 
+              posEnabled: false, 
+              pmsEnabled: false, 
+              branches: c.branches.map(b => ({ ...b, status: 'inactive' as const })),
+              updatedAt: new Date().toISOString().split('T')[0] 
+            } : c
           ),
         }));
         if (client) {
@@ -412,6 +593,7 @@ export const useSuperAdminStore = create<SuperAdminStore>()(
                   status: 'active',
                   posEnabled: c.services.includes('pos'),
                   pmsEnabled: c.services.includes('pms'),
+                  branches: c.branches.map(b => ({ ...b, status: 'active' as const })),
                   updatedAt: new Date().toISOString().split('T')[0],
                 }
               : c
@@ -471,6 +653,74 @@ export const useSuperAdminStore = create<SuperAdminStore>()(
           targetName: client.businessName,
           performedBy: get().superAdminUser?.name || 'Super Admin',
         });
+      },
+      
+      addBranch: (clientId, branchData) => {
+        const client = get().clients.find(c => c.id === clientId);
+        if (!client) return;
+        
+        const newBranch: Branch = {
+          ...branchData,
+          id: `BR${clientId.replace('CLT', '')}-${client.branches.length + 1}`,
+          createdAt: new Date().toISOString().split('T')[0],
+        };
+        
+        set((state) => ({
+          clients: state.clients.map((c) =>
+            c.id === clientId
+              ? { ...c, branches: [...c.branches, newBranch], updatedAt: new Date().toISOString().split('T')[0] }
+              : c
+          ),
+        }));
+        
+        get().addActivityLog({
+          action: `Branch added: ${newBranch.name}`,
+          targetType: 'client',
+          targetId: clientId,
+          targetName: client.businessName,
+          performedBy: get().superAdminUser?.name || 'Super Admin',
+        });
+      },
+      
+      updateBranch: (clientId, branchId, updates) => {
+        set((state) => ({
+          clients: state.clients.map((c) =>
+            c.id === clientId
+              ? {
+                  ...c,
+                  branches: c.branches.map(b => b.id === branchId ? { ...b, ...updates } : b),
+                  updatedAt: new Date().toISOString().split('T')[0],
+                }
+              : c
+          ),
+        }));
+      },
+      
+      deleteBranch: (clientId, branchId) => {
+        const client = get().clients.find(c => c.id === clientId);
+        const branch = client?.branches.find(b => b.id === branchId);
+        
+        set((state) => ({
+          clients: state.clients.map((c) =>
+            c.id === clientId
+              ? {
+                  ...c,
+                  branches: c.branches.filter(b => b.id !== branchId),
+                  updatedAt: new Date().toISOString().split('T')[0],
+                }
+              : c
+          ),
+        }));
+        
+        if (client && branch) {
+          get().addActivityLog({
+            action: `Branch deleted: ${branch.name}`,
+            targetType: 'client',
+            targetId: clientId,
+            targetName: client.businessName,
+            performedBy: get().superAdminUser?.name || 'Super Admin',
+          });
+        }
       },
       
       updateComplaintStatus: (id, status, notes) => {
