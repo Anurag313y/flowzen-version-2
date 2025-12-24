@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSuperAdminStore } from '@/store/superAdminStore';
+import { useSuperAdminStore, Branch } from '@/store/superAdminStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -14,8 +15,36 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Save, FileText } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ArrowLeft, Save, FileText, Plus, Building2, Trash2, MapPin, Phone, Mail, Star } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface BranchFormData {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  phone: string;
+  email: string;
+  isMain: boolean;
+}
+
+const emptyBranch: BranchFormData = {
+  name: '',
+  address: '',
+  city: '',
+  state: '',
+  phone: '',
+  email: '',
+  isMain: false,
+};
 
 export default function AddClientPage() {
   const navigate = useNavigate();
@@ -41,6 +70,11 @@ export default function AddClientPage() {
     notes: '',
   });
 
+  const [branches, setBranches] = useState<BranchFormData[]>([]);
+  const [branchDialogOpen, setBranchDialogOpen] = useState(false);
+  const [editingBranchIndex, setEditingBranchIndex] = useState<number | null>(null);
+  const [branchForm, setBranchForm] = useState<BranchFormData>(emptyBranch);
+
   const handleServiceChange = (service: 'pos' | 'pms', checked: boolean) => {
     setFormData((prev) => ({
       ...prev,
@@ -56,6 +90,77 @@ export default function AddClientPage() {
     return date.toISOString().split('T')[0];
   };
 
+  const openAddBranchDialog = () => {
+    setBranchForm({
+      ...emptyBranch,
+      isMain: branches.length === 0,
+    });
+    setEditingBranchIndex(null);
+    setBranchDialogOpen(true);
+  };
+
+  const openEditBranchDialog = (index: number) => {
+    setBranchForm(branches[index]);
+    setEditingBranchIndex(index);
+    setBranchDialogOpen(true);
+  };
+
+  const handleSaveBranch = () => {
+    if (!branchForm.name || !branchForm.city) {
+      toast.error('Please fill in branch name and city');
+      return;
+    }
+
+    if (editingBranchIndex !== null) {
+      const updated = [...branches];
+      updated[editingBranchIndex] = branchForm;
+      
+      // If setting as main, unset others
+      if (branchForm.isMain) {
+        updated.forEach((b, i) => {
+          if (i !== editingBranchIndex) b.isMain = false;
+        });
+      }
+      
+      setBranches(updated);
+    } else {
+      const newBranches = [...branches, branchForm];
+      
+      // If setting as main, unset others
+      if (branchForm.isMain) {
+        newBranches.forEach((b, i) => {
+          if (i !== newBranches.length - 1) b.isMain = false;
+        });
+      }
+      
+      setBranches(newBranches);
+    }
+
+    setBranchDialogOpen(false);
+    setBranchForm(emptyBranch);
+    setEditingBranchIndex(null);
+  };
+
+  const handleDeleteBranch = (index: number) => {
+    const wasMain = branches[index].isMain;
+    const updated = branches.filter((_, i) => i !== index);
+    
+    // If deleted branch was main, make first one main
+    if (wasMain && updated.length > 0) {
+      updated[0].isMain = true;
+    }
+    
+    setBranches(updated);
+  };
+
+  const handleSetMainBranch = (index: number) => {
+    const updated = branches.map((b, i) => ({
+      ...b,
+      isMain: i === index,
+    }));
+    setBranches(updated);
+  };
+
   const handleSubmit = (asDraft: boolean = false) => {
     if (!formData.businessType || !formData.businessName || !formData.ownerName || !formData.ownerEmail) {
       toast.error('Please fill in all required fields');
@@ -66,6 +171,29 @@ export default function AddClientPage() {
       toast.error('Please fill in subscription details');
       return;
     }
+
+    // Create default branch if none added
+    const clientBranches: Omit<Branch, 'id' | 'createdAt'>[] = branches.length > 0 
+      ? branches.map(b => ({
+          name: b.name,
+          address: b.address,
+          city: b.city,
+          state: b.state,
+          phone: b.phone,
+          email: b.email,
+          isMain: b.isMain,
+          status: asDraft ? 'inactive' as const : 'active' as const,
+        }))
+      : [{
+          name: 'Main Branch',
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          phone: formData.ownerPhone,
+          email: formData.ownerEmail,
+          isMain: true,
+          status: asDraft ? 'inactive' as const : 'active' as const,
+        }];
 
     const expiryDate = formData.subscriptionPlan
       ? calculateExpiryDate(formData.activationDate, formData.subscriptionPlan)
@@ -93,6 +221,11 @@ export default function AddClientPage() {
       posEnabled: !asDraft && formData.services.includes('pos'),
       pmsEnabled: !asDraft && formData.services.includes('pms'),
       notes: formData.notes || undefined,
+      branches: clientBranches.map((b, index) => ({
+        ...b,
+        id: `BR-NEW-${index + 1}`,
+        createdAt: new Date().toISOString().split('T')[0],
+      })),
     });
 
     toast.success(asDraft ? 'Client saved as draft' : 'Client added and activated successfully');
@@ -195,8 +328,8 @@ export default function AddClientPage() {
         {/* Location Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Location</CardTitle>
-            <CardDescription>Business address and location details</CardDescription>
+            <CardTitle>Primary Location</CardTitle>
+            <CardDescription>Main business address</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -265,6 +398,103 @@ export default function AddClientPage() {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Branches Section - Full Width */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Branches
+                </CardTitle>
+                <CardDescription>Manage all branches for this client</CardDescription>
+              </div>
+              <Button onClick={openAddBranchDialog} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Branch
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {branches.length === 0 ? (
+              <div className="text-center py-8 border border-dashed rounded-lg">
+                <Building2 className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground mb-2">No branches added yet</p>
+                <p className="text-sm text-muted-foreground mb-4">A default branch will be created from the primary location</p>
+                <Button variant="outline" size="sm" onClick={openAddBranchDialog}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Branch
+                </Button>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {branches.map((branch, index) => (
+                  <div
+                    key={index}
+                    className="relative p-4 border rounded-lg hover:border-primary/50 transition-colors group"
+                  >
+                    {branch.isMain && (
+                      <Badge className="absolute -top-2 left-3 bg-primary text-primary-foreground text-xs">
+                        <Star className="h-3 w-3 mr-1" />
+                        Main
+                      </Badge>
+                    )}
+                    <div className="pt-2">
+                      <h4 className="font-medium mb-2">{branch.name}</h4>
+                      <div className="space-y-1 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-3.5 w-3.5" />
+                          <span>{branch.city}, {branch.state}</span>
+                        </div>
+                        {branch.phone && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-3.5 w-3.5" />
+                            <span>{branch.phone}</span>
+                          </div>
+                        )}
+                        {branch.email && (
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-3.5 w-3.5" />
+                            <span className="truncate">{branch.email}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 h-8"
+                        onClick={() => openEditBranchDialog(index)}
+                      >
+                        Edit
+                      </Button>
+                      {!branch.isMain && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => handleSetMainBranch(index)}
+                        >
+                          Set Main
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteBranch(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -393,6 +623,94 @@ export default function AddClientPage() {
           Save & Activate
         </Button>
       </div>
+
+      {/* Branch Dialog */}
+      <Dialog open={branchDialogOpen} onOpenChange={setBranchDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingBranchIndex !== null ? 'Edit Branch' : 'Add New Branch'}</DialogTitle>
+            <DialogDescription>Enter branch details</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="branchName">Branch Name *</Label>
+              <Input
+                id="branchName"
+                value={branchForm.name}
+                onChange={(e) => setBranchForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g., Downtown Outlet"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="branchAddress">Address</Label>
+              <Textarea
+                id="branchAddress"
+                value={branchForm.address}
+                onChange={(e) => setBranchForm(prev => ({ ...prev, address: e.target.value }))}
+                placeholder="Full address"
+                rows={2}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="branchCity">City *</Label>
+                <Input
+                  id="branchCity"
+                  value={branchForm.city}
+                  onChange={(e) => setBranchForm(prev => ({ ...prev, city: e.target.value }))}
+                  placeholder="City"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="branchState">State</Label>
+                <Input
+                  id="branchState"
+                  value={branchForm.state}
+                  onChange={(e) => setBranchForm(prev => ({ ...prev, state: e.target.value }))}
+                  placeholder="State"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="branchPhone">Phone</Label>
+                <Input
+                  id="branchPhone"
+                  value={branchForm.phone}
+                  onChange={(e) => setBranchForm(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="+91 98765 43210"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="branchEmail">Email</Label>
+                <Input
+                  id="branchEmail"
+                  type="email"
+                  value={branchForm.email}
+                  onChange={(e) => setBranchForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="branch@email.com"
+                />
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isMain"
+                checked={branchForm.isMain}
+                onCheckedChange={(checked) => setBranchForm(prev => ({ ...prev, isMain: checked as boolean }))}
+              />
+              <Label htmlFor="isMain">Set as main branch</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBranchDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveBranch}>
+              {editingBranchIndex !== null ? 'Update' : 'Add'} Branch
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

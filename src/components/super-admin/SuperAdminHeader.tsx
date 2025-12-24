@@ -9,12 +9,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useSuperAdminStore, Client } from '@/store/superAdminStore';
-import { Bell, LogOut, User, Settings, Building2 } from 'lucide-react';
+import { useSuperAdminStore } from '@/store/superAdminStore';
+import { Bell, LogOut, User, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { BranchSelector, Branch } from '@/components/shared/BranchSelector';
-import { useState } from 'react';
 
 interface SuperAdminHeaderProps {
   sidebarCollapsed: boolean;
@@ -22,30 +20,14 @@ interface SuperAdminHeaderProps {
 
 export function SuperAdminHeader({ sidebarCollapsed }: SuperAdminHeaderProps) {
   const navigate = useNavigate();
-  const { superAdminUser, logoutSuperAdmin, complaints, clients } = useSuperAdminStore();
+  const { superAdminUser, logoutSuperAdmin, complaints } = useSuperAdminStore();
   
   const openComplaints = complaints.filter(c => c.status !== 'resolved').length;
-
-  // Get unique clients as "branches" for super admin context
-  const clientBranches: Branch[] = clients.slice(0, 10).map(c => ({
-    id: c.id,
-    name: c.businessName,
-    city: c.city,
-    isMain: false,
-  }));
-
-  const [selectedClient, setSelectedClient] = useState<Branch | null>(null);
 
   const handleLogout = () => {
     logoutSuperAdmin();
     toast.success('Logged out successfully');
     navigate('/super-admin/login');
-  };
-
-  const handleClientSelect = (branch: Branch) => {
-    setSelectedClient(branch);
-    toast.info(`Viewing ${branch.name}`);
-    navigate(`/super-admin/clients/${branch.id}`);
   };
 
   return (
@@ -60,19 +42,6 @@ export function SuperAdminHeader({ sidebarCollapsed }: SuperAdminHeaderProps) {
           <h2 className="font-semibold text-white">Super Admin Console</h2>
           <p className="text-xs text-slate-400">Flozen SaaS Management</p>
         </div>
-        
-        {/* Quick Client Selector */}
-        {clientBranches.length > 0 && (
-          <div className="hidden md:block ml-4">
-            <BranchSelector
-              branches={clientBranches}
-              selectedBranch={selectedClient}
-              onSelectBranch={handleClientSelect}
-              variant="compact"
-              className="bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600 w-[200px]"
-            />
-          </div>
-        )}
       </div>
 
       <div className="flex items-center gap-3">
