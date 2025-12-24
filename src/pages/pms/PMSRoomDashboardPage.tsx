@@ -97,6 +97,10 @@ interface RoomCardProps {
 function RoomCard({ room, reservation, onAction }: RoomCardProps) {
   const colors = roomStatusColors[room.status] || roomStatusColors.available;
   const isOccupied = room.status === 'occupied' && reservation;
+  const isMaintenance = room.status === 'maintenance';
+  const isCleaning = room.status === 'cleaning';
+  const isReserved = room.status === 'reserved';
+  const isAvailable = room.status === 'available';
   const price = room.baseRate || roomPrices[room.type] || 1500;
   
   return (
@@ -143,44 +147,60 @@ function RoomCard({ room, reservation, onAction }: RoomCardProps) {
         {/* Row 3 & 4: Action Icons */}
         <div className="border-t border-white/20 pt-1">
           <div className="grid grid-cols-3 gap-0.5">
+            {/* Book: Only for Available rooms */}
             <ActionButton
               icon={<CalendarPlus className="h-3.5 w-3.5" />}
               label="Book"
               onClick={() => onAction('book', room, reservation)}
-              disabled={room.status === 'maintenance'}
+              disabled={!isAvailable}
             />
+            {/* KOT: Only for Occupied rooms */}
             <ActionButton
               icon={<UtensilsCrossed className="h-3.5 w-3.5" />}
               label="KOT"
               onClick={() => onAction('kot', room, reservation)}
               disabled={!isOccupied}
             />
+            {/* Check-In: Only for Available or Reserved rooms */}
             <ActionButton
               icon={<LogIn className="h-3.5 w-3.5" />}
               label="In"
               onClick={() => onAction('checkin', room, reservation)}
-              disabled={room.status !== 'reserved' && room.status !== 'available'}
+              disabled={!isAvailable && !isReserved}
             />
           </div>
           <div className="grid grid-cols-3 gap-0.5">
+            {/* Check-Out: Only for Occupied rooms */}
             <ActionButton
               icon={<LogOut className="h-3.5 w-3.5" />}
               label="Out"
               onClick={() => onAction('checkout', room, reservation)}
               disabled={!isOccupied}
             />
+            {/* Bill: Only for Occupied rooms */}
             <ActionButton
               icon={<Receipt className="h-3.5 w-3.5" />}
               label="Bill"
               onClick={() => onAction('bill', room, reservation)}
               disabled={!isOccupied}
             />
-            <ActionButton
-              icon={<Sparkles className="h-3.5 w-3.5" />}
-              label="Clean"
-              onClick={() => onAction('clean', room, reservation)}
-              disabled={room.housekeepingStatus === 'clean'}
-            />
+            {/* Clean: Only for Cleaning status rooms */}
+            {/* Fix: Only for Maintenance status rooms (replaces Clean) */}
+            {isMaintenance ? (
+              <ActionButton
+                icon={<Wrench className="h-3.5 w-3.5" />}
+                label="Fix"
+                onClick={() => onAction('fix', room, reservation)}
+                disabled={false}
+              />
+            ) : (
+              <ActionButton
+                icon={<Sparkles className="h-3.5 w-3.5" />}
+                label="Clean"
+                onClick={() => onAction('clean', room, reservation)}
+                disabled={!isCleaning}
+              />
+            )}
           </div>
         </div>
       </CardContent>
@@ -218,6 +238,7 @@ export default function PMSRoomDashboardPage() {
     checkIn, 
     checkOut, 
     updateHousekeepingStatus,
+    updateRoomStatus,
     createReservation,
     getFolio,
     addRoom,
@@ -391,6 +412,10 @@ export default function PMSRoomDashboardPage() {
       case 'clean':
         updateHousekeepingStatus(room.id, 'clean');
         toast({ title: 'Room marked clean', description: `Room ${room.number} is now available` });
+        break;
+      case 'fix':
+        updateRoomStatus(room.id, 'cleaning');
+        toast({ title: 'Maintenance complete', description: `Room ${room.number} sent to housekeeping` });
         break;
     }
   };
