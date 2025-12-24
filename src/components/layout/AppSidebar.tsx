@@ -69,7 +69,7 @@ const sidebarItems: SidebarItem[] = [
   // Hotel PMS Section (Optimized - Room Dashboard is primary)
   { id: 'pms-dashboard', label: 'PMS Dashboard', icon: Building2, path: '/pms', section: 'hotel' },
   { id: 'pms-rooms', label: 'Room Dashboard', icon: BedDouble, path: '/pms/rooms', section: 'hotel' },
-  { id: 'pms-reservations', label: 'Reservations', icon: CalendarDays, path: '/pms/reservations', section: 'hotel' },
+  { id: 'pms-reservations', label: 'Guest Movement', icon: CalendarDays, path: '/pms/reservations', section: 'hotel' },
   { id: 'pms-front-desk', label: 'Front Desk', icon: DoorOpen, path: '/pms/front-desk', section: 'hotel' },
   { id: 'pms-housekeeping', label: 'Housekeeping', icon: ClipboardCheck, path: '/pms/housekeeping', section: 'hotel' },
   { id: 'pms-billing', label: 'Billing & Folios', icon: Receipt, path: '/pms/billing', section: 'hotel' },

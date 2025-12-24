@@ -36,13 +36,13 @@ import {
 import { cn } from '@/lib/utils';
 import type { Room, Reservation, Guest } from '@/types/pms';
 
-// Room status color mapping
-const roomStatusColors: Record<string, { bg: string; text: string; border: string }> = {
-  available: { bg: 'bg-emerald-50 dark:bg-emerald-950/30', text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-800' },
-  occupied: { bg: 'bg-blue-50 dark:bg-blue-950/30', text: 'text-blue-700 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800' },
-  reserved: { bg: 'bg-amber-50 dark:bg-amber-950/30', text: 'text-amber-700 dark:text-amber-400', border: 'border-amber-200 dark:border-amber-800' },
-  maintenance: { bg: 'bg-red-50 dark:bg-red-950/30', text: 'text-red-700 dark:text-red-400', border: 'border-red-200 dark:border-red-800' },
-  cleaning: { bg: 'bg-purple-50 dark:bg-purple-950/30', text: 'text-purple-700 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-800' },
+// Room status color mapping - Strong distinct colors
+const roomStatusColors: Record<string, { bg: string; text: string; border: string; dot: string }> = {
+  available: { bg: 'bg-emerald-500', text: 'text-white', border: 'border-emerald-600', dot: 'bg-emerald-500' },
+  occupied: { bg: 'bg-sky-500', text: 'text-white', border: 'border-sky-600', dot: 'bg-sky-500' },
+  reserved: { bg: 'bg-amber-500', text: 'text-white', border: 'border-amber-600', dot: 'bg-amber-500' },
+  maintenance: { bg: 'bg-rose-500', text: 'text-white', border: 'border-rose-600', dot: 'bg-rose-500' },
+  cleaning: { bg: 'bg-violet-500', text: 'text-white', border: 'border-violet-600', dot: 'bg-violet-500' },
 };
 
 const roomTypeLabels: Record<string, string> = {
@@ -53,6 +53,28 @@ const roomTypeLabels: Record<string, string> = {
   presidential: 'PRE',
 };
 
+// Color legend component
+function StatusLegend() {
+  const statuses = [
+    { key: 'available', label: 'Available' },
+    { key: 'occupied', label: 'Occupied' },
+    { key: 'reserved', label: 'Reserved' },
+    { key: 'cleaning', label: 'Cleaning' },
+    { key: 'maintenance', label: 'Maintenance' },
+  ];
+  
+  return (
+    <div className="flex items-center gap-3 flex-wrap">
+      {statuses.map(s => (
+        <div key={s.key} className="flex items-center gap-1.5">
+          <div className={cn("w-3 h-3 rounded-full", roomStatusColors[s.key].dot)} />
+          <span className="text-xs text-muted-foreground">{s.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface RoomCardProps {
   room: Room;
   reservation?: Reservation;
@@ -62,87 +84,80 @@ interface RoomCardProps {
 function RoomCard({ room, reservation, onAction }: RoomCardProps) {
   const colors = roomStatusColors[room.status] || roomStatusColors.available;
   const isOccupied = room.status === 'occupied' && reservation;
-  const needsCleaning = room.housekeepingStatus === 'dirty';
   
   return (
     <Card className={cn(
       "relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5",
       colors.bg,
-      colors.border,
-      "border-2"
+      "border-0"
     )}>
-      <CardContent className="p-3">
+      <CardContent className="p-2">
         {/* Room Number & Type Header */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className={cn("text-xl font-bold", colors.text)}>
-              {room.number}
-            </span>
-            <Badge variant="outline" className={cn("text-xs font-medium", colors.text, colors.border)}>
-              {roomTypeLabels[room.type] || room.type.toUpperCase()}
-            </Badge>
-          </div>
-          {needsCleaning && (
-            <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
-          )}
+        <div className="flex items-center justify-between mb-1">
+          <span className={cn("text-lg font-bold", colors.text)}>
+            {room.number}
+          </span>
+          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-white/20 text-white border-0">
+            {roomTypeLabels[room.type] || room.type.toUpperCase()}
+          </Badge>
         </div>
 
-        {/* Guest Info - Only show if occupied */}
+        {/* Guest Info - Compact */}
         {isOccupied && reservation ? (
-          <div className="space-y-1.5 mb-3">
-            <div className="flex items-center gap-1.5 text-sm">
-              <User className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="font-medium truncate">
+          <div className="mb-2 space-y-0.5">
+            <div className="flex items-center gap-1 text-xs">
+              <User className="h-3 w-3 text-white/80" />
+              <span className="font-medium text-white truncate text-[11px]">
                 {reservation.guest.firstName} {reservation.guest.lastName}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Phone className="h-3 w-3" />
+            <div className="flex items-center gap-1 text-[10px] text-white/70">
+              <Phone className="h-2.5 w-2.5" />
               <span>{reservation.guest.phone}</span>
             </div>
           </div>
         ) : (
-          <div className="h-12 flex items-center justify-center">
-            <span className={cn("text-sm font-medium capitalize", colors.text)}>
-              {room.status === 'cleaning' ? 'Being Cleaned' : room.status}
+          <div className="h-8 flex items-center">
+            <span className={cn("text-xs font-medium capitalize", colors.text)}>
+              {room.status === 'cleaning' ? 'Cleaning' : room.status}
             </span>
           </div>
         )}
 
-        {/* Action Icons Row */}
-        <div className="flex items-center justify-between gap-1 pt-2 border-t border-border/50">
+        {/* Action Icons - 2 Rows */}
+        <div className="grid grid-cols-3 gap-0.5 pt-1 border-t border-white/20">
           <ActionButton
-            icon={<CalendarPlus className="h-4 w-4" />}
+            icon={<CalendarPlus className="h-3 w-3" />}
             label="Book"
             onClick={() => onAction('book', room, reservation)}
             disabled={room.status === 'maintenance'}
           />
           <ActionButton
-            icon={<UtensilsCrossed className="h-4 w-4" />}
+            icon={<UtensilsCrossed className="h-3 w-3" />}
             label="KOT"
             onClick={() => onAction('kot', room, reservation)}
             disabled={!isOccupied}
           />
           <ActionButton
-            icon={<LogIn className="h-4 w-4" />}
+            icon={<LogIn className="h-3 w-3" />}
             label="In"
             onClick={() => onAction('checkin', room, reservation)}
             disabled={room.status !== 'reserved' && room.status !== 'available'}
           />
           <ActionButton
-            icon={<LogOut className="h-4 w-4" />}
+            icon={<LogOut className="h-3 w-3" />}
             label="Out"
             onClick={() => onAction('checkout', room, reservation)}
             disabled={!isOccupied}
           />
           <ActionButton
-            icon={<Receipt className="h-4 w-4" />}
+            icon={<Receipt className="h-3 w-3" />}
             label="Bill"
             onClick={() => onAction('bill', room, reservation)}
             disabled={!isOccupied}
           />
           <ActionButton
-            icon={<Sparkles className="h-4 w-4" />}
+            icon={<Sparkles className="h-3 w-3" />}
             label="Clean"
             onClick={() => onAction('clean', room, reservation)}
             disabled={room.housekeepingStatus === 'clean'}
@@ -164,14 +179,14 @@ function ActionButton({ icon, label, onClick, disabled }: {
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "flex flex-col items-center gap-0.5 p-1.5 rounded-md transition-colors",
+        "flex flex-col items-center gap-0 py-1 rounded transition-colors",
         disabled 
           ? "opacity-30 cursor-not-allowed" 
-          : "hover:bg-background/80 cursor-pointer active:scale-95"
+          : "hover:bg-white/20 cursor-pointer active:scale-95"
       )}
     >
-      {icon}
-      <span className="text-[10px] font-medium text-muted-foreground">{label}</span>
+      <span className="text-white">{icon}</span>
+      <span className="text-[8px] font-medium text-white/80">{label}</span>
     </button>
   );
 }
@@ -352,38 +367,26 @@ export default function PMSRoomDashboardPage() {
   };
 
   return (
-    <div className="space-y-4 pb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Room Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Manage all rooms in one place</p>
-        </div>
+    <div className="space-y-3 pb-6">
+      {/* Header with Legend */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="text-xl font-bold">Room Dashboard</h1>
+        <StatusLegend />
       </div>
 
-      {/* Stats Row - Responsive */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
-        <StatCard icon={<BedDouble />} label="Total" value={stats.total} color="text-foreground" />
-        <StatCard icon={<BedDouble />} label="Available" value={stats.available} color="text-emerald-600" />
-        <StatCard icon={<Users />} label="Occupied" value={stats.occupied} color="text-blue-600" />
-        <StatCard icon={<Sparkles />} label="Cleaning" value={stats.cleaning} color="text-purple-600" />
-        <StatCard icon={<Wrench />} label="Maintenance" value={stats.maintenance} color="text-red-600" />
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-[300px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      {/* Filters - Compact */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[180px] max-w-[250px]">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search room or guest..."
+            placeholder="Search room/guest..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="pl-8 h-9"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[140px]">
-            <Filter className="h-4 w-4 mr-2" />
+          <SelectTrigger className="w-[120px] h-9">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -396,7 +399,7 @@ export default function PMSRoomDashboardPage() {
           </SelectContent>
         </Select>
         <Select value={floorFilter} onValueChange={setFloorFilter}>
-          <SelectTrigger className="w-[120px]">
+          <SelectTrigger className="w-[100px] h-9">
             <SelectValue placeholder="Floor" />
           </SelectTrigger>
           <SelectContent>
@@ -406,10 +409,13 @@ export default function PMSRoomDashboardPage() {
             ))}
           </SelectContent>
         </Select>
+        <div className="ml-auto text-xs text-muted-foreground">
+          {stats.available}/{stats.total} available
+        </div>
       </div>
 
-      {/* Room Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+      {/* Room Grid - More compact */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
         {filteredRooms.map(room => (
           <RoomCard 
             key={room.id} 
