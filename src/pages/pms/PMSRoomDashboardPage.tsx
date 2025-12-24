@@ -79,6 +79,15 @@ function StatusLegend() {
   );
 }
 
+// Room price based on type
+const roomPrices: Record<string, number> = {
+  standard: 1500,
+  deluxe: 2500,
+  suite: 4000,
+  executive: 5500,
+  presidential: 10000,
+};
+
 interface RoomCardProps {
   room: Room;
   reservation?: Reservation;
@@ -88,6 +97,7 @@ interface RoomCardProps {
 function RoomCard({ room, reservation, onAction }: RoomCardProps) {
   const colors = roomStatusColors[room.status] || roomStatusColors.available;
   const isOccupied = room.status === 'occupied' && reservation;
+  const price = room.baseRate || roomPrices[room.type] || 1500;
   
   return (
     <Card className={cn(
@@ -96,78 +106,77 @@ function RoomCard({ room, reservation, onAction }: RoomCardProps) {
       "border-0"
     )}>
       <CardContent className="p-2">
-        {/* Header: Room Number, Guest/Status, Room Type */}
-        <div className="space-y-0.5 mb-2">
-          {/* Room Number */}
-          <div className="text-center">
-            <span className={cn("text-lg font-bold", colors.text)}>
-              {room.number}
-            </span>
-          </div>
-          
-          {/* Guest Name & Phone OR Status */}
-          {isOccupied && reservation ? (
-            <div className="text-center space-y-0.5">
-              <div className={cn("text-xs font-semibold truncate", colors.text)}>
-                {reservation.guest.firstName} {reservation.guest.lastName}
-              </div>
-              <div className="text-[10px] text-white/90">
-                {reservation.guest.phone}
-              </div>
-            </div>
-          ) : (
-            <div className="text-center">
-              <span className={cn("text-xs font-semibold capitalize", colors.text)}>
-                {room.status}
-              </span>
-            </div>
-          )}
-          
-          {/* Room Type - Full Name */}
-          <div className="text-center">
-            <span className="text-[10px] text-white/80 uppercase tracking-wide font-medium">
-              {roomTypeLabels[room.type] || room.type}
-            </span>
-          </div>
+        {/* Row 1: Room Number | Status | Price */}
+        <div className="flex items-center justify-between mb-1">
+          <span className={cn("text-base font-bold", colors.text)}>
+            {room.number}
+          </span>
+          <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-white/20 text-white border-0 capitalize">
+            {room.status}
+          </Badge>
+          <span className="text-[10px] font-semibold text-white/90">
+            ₹{price.toLocaleString()}
+          </span>
         </div>
 
-        {/* Action Icons - 2 Rows of 3 with bigger icons */}
-        <div className="border-t border-white/20 pt-1.5">
+        {/* Row 2: Guest Name | Phone | Room Type - Only if occupied */}
+        {isOccupied && reservation ? (
+          <div className="flex items-center justify-between mb-1.5 text-[10px]">
+            <span className="text-white font-medium truncate max-w-[60px]" title={`${reservation.guest.firstName} ${reservation.guest.lastName}`}>
+              {reservation.guest.firstName}
+            </span>
+            <span className="text-white/80 truncate">
+              {reservation.guest.phone.slice(-4)}
+            </span>
+            <span className="text-white/90 font-medium">
+              {roomTypeLabels[room.type]}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center mb-1.5">
+            <span className="text-[10px] text-white/80 font-medium">
+              {roomTypeLabels[room.type]}
+            </span>
+          </div>
+        )}
+
+        {/* Row 3 & 4: Action Icons */}
+        <div className="border-t border-white/20 pt-1">
           <div className="grid grid-cols-3 gap-0.5">
             <ActionButton
-              icon={<CalendarPlus className="h-4 w-4" />}
+              icon={<CalendarPlus className="h-3.5 w-3.5" />}
               label="Book"
               onClick={() => onAction('book', room, reservation)}
               disabled={room.status === 'maintenance'}
             />
             <ActionButton
-              icon={<UtensilsCrossed className="h-4 w-4" />}
+              icon={<UtensilsCrossed className="h-3.5 w-3.5" />}
               label="KOT"
               onClick={() => onAction('kot', room, reservation)}
               disabled={!isOccupied}
             />
             <ActionButton
-              icon={<LogIn className="h-4 w-4" />}
+              icon={<LogIn className="h-3.5 w-3.5" />}
               label="In"
               onClick={() => onAction('checkin', room, reservation)}
               disabled={room.status !== 'reserved' && room.status !== 'available'}
             />
           </div>
-          <div className="grid grid-cols-3 gap-0.5 mt-0.5">
+          <div className="grid grid-cols-3 gap-0.5">
             <ActionButton
-              icon={<LogOut className="h-4 w-4" />}
+              icon={<LogOut className="h-3.5 w-3.5" />}
               label="Out"
               onClick={() => onAction('checkout', room, reservation)}
               disabled={!isOccupied}
             />
             <ActionButton
-              icon={<Receipt className="h-4 w-4" />}
+              icon={<Receipt className="h-3.5 w-3.5" />}
               label="Bill"
               onClick={() => onAction('bill', room, reservation)}
               disabled={!isOccupied}
             />
             <ActionButton
-              icon={<Sparkles className="h-4 w-4" />}
+              icon={<Sparkles className="h-3.5 w-3.5" />}
               label="Clean"
               onClick={() => onAction('clean', room, reservation)}
               disabled={room.housekeepingStatus === 'clean'}
