@@ -278,7 +278,7 @@ export default function PMSMaintenancePage() {
                 <CardContent>
                   <p className="text-sm text-muted-foreground mb-4">{ticket.description || 'No description provided'}</p>
                   <div className="flex gap-2">
-                    {ticket.status !== 'completed' && (
+                    {ticket.status !== 'resolved' && (
                       <>
                         {ticket.status === 'open' && (
                           <Button size="sm" variant="outline" onClick={() => handleStatusChange(ticket.id, 'in_progress')}>
@@ -286,7 +286,7 @@ export default function PMSMaintenancePage() {
                           </Button>
                         )}
                         {ticket.status === 'in_progress' && (
-                          <Button size="sm" variant="outline" onClick={() => handleStatusChange(ticket.id, 'completed')}>
+                          <Button size="sm" variant="outline" onClick={() => handleStatusChange(ticket.id, 'resolved')}>
                             Mark Complete
                           </Button>
                         )}

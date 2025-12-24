@@ -55,6 +55,11 @@ import PMSDashboardPage from "./pages/pms/PMSDashboardPage";
 import PMSReservationsPage from "./pages/pms/PMSReservationsPage";
 import PMSRoomRackPage from "./pages/pms/PMSRoomRackPage";
 import PMSFrontDeskPage from "./pages/pms/PMSFrontDeskPage";
+import PMSHousekeepingPage from "./pages/pms/PMSHousekeepingPage";
+import PMSMaintenancePage from "./pages/pms/PMSMaintenancePage";
+import PMSBillingPage from "./pages/pms/PMSBillingPage";
+import PMSRatesPage from "./pages/pms/PMSRatesPage";
+import PMSSettingsPage from "./pages/pms/PMSSettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -153,6 +158,11 @@ function AppRoutes() {
         <Route path="/pms/reservations" element={<PMSReservationsPage />} />
         <Route path="/pms/room-rack" element={<PMSRoomRackPage />} />
         <Route path="/pms/front-desk" element={<PMSFrontDeskPage />} />
+        <Route path="/pms/housekeeping" element={<PMSHousekeepingPage />} />
+        <Route path="/pms/maintenance" element={<PMSMaintenancePage />} />
+        <Route path="/pms/billing" element={<PMSBillingPage />} />
+        <Route path="/pms/rates" element={<PMSRatesPage />} />
+        <Route path="/pms/settings" element={<PMSSettingsPage />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
