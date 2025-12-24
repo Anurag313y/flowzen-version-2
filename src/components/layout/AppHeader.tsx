@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
+import { useBranchStore } from '@/store/branchStore';
+import { BranchSelector, Branch } from '@/components/shared/BranchSelector';
 import { toast } from 'sonner';
 
 interface AppHeaderProps {
@@ -33,6 +35,7 @@ interface AppHeaderProps {
 export function AppHeader({ sidebarCollapsed }: AppHeaderProps) {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { branches, selectedBranchId, selectBranch } = useBranchStore();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -54,6 +57,19 @@ export function AppHeader({ sidebarCollapsed }: AppHeaderProps) {
     navigate('/login');
   };
 
+  const handleBranchChange = (branch: Branch) => {
+    selectBranch(branch.id);
+    toast.success(`Switched to ${branch.name}`);
+  };
+
+  const selectedBranch = branches.find(b => b.id === selectedBranchId) || null;
+  const branchList: Branch[] = branches.map(b => ({
+    id: b.id,
+    name: b.name,
+    city: b.city,
+    isMain: b.isMain,
+  }));
+
   const displayName = user?.name || 'User';
   const displayRole = user?.role || 'manager';
   const initials = displayName.split(' ').map(n => n[0]).join('');
@@ -65,22 +81,36 @@ export function AppHeader({ sidebarCollapsed }: AppHeaderProps) {
         sidebarCollapsed ? "left-16" : "left-60"
       )}
     >
-      <div className="h-full px-6 flex items-center justify-between">
-        {/* Left Section - Search */}
-        <div className="flex items-center gap-4 flex-1 max-w-xl">
-          <div className="relative flex-1">
+      <div className="h-full px-4 flex items-center justify-between gap-4">
+        {/* Left Section - Branch Selector & Search */}
+        <div className="flex items-center gap-3 flex-1">
+          {/* Branch Selector */}
+          <BranchSelector
+            branches={branchList}
+            selectedBranch={selectedBranch ? {
+              id: selectedBranch.id,
+              name: selectedBranch.name,
+              city: selectedBranch.city,
+              isMain: selectedBranch.isMain,
+            } : null}
+            onSelectBranch={handleBranchChange}
+            className="w-[180px]"
+          />
+
+          {/* Search */}
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search menu, orders, tables..."
-              className="pl-10 bg-background border-border"
+              className="pl-10 bg-background border-border h-9"
             />
           </div>
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* Date & Time */}
-          <div className="flex items-center gap-3 text-muted-foreground border-r border-border pr-4">
+          <div className="hidden lg:flex items-center gap-3 text-muted-foreground border-r border-border pr-3">
             <div className="flex items-center gap-1.5 text-sm">
               <Calendar className="h-4 w-4" />
               <span>{formatDate(currentTime)}</span>
@@ -92,27 +122,27 @@ export function AppHeader({ sidebarCollapsed }: AppHeaderProps) {
           </div>
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" size="icon" className="relative h-9 w-9">
             <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
           </Button>
 
           {/* Auto Refresh Indicator */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
             <RefreshCw className="h-4 w-4" />
-            <span>Auto-refresh: ON</span>
+            <span>Auto-refresh</span>
           </div>
 
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" className="flex items-center gap-2 h-9 px-2">
+                <Avatar className="h-7 w-7">
                   <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col items-start text-xs">
+                <div className="hidden sm:flex flex-col items-start text-xs">
                   <span className="font-medium">{displayName}</span>
                   <span className="text-muted-foreground capitalize">{displayRole}</span>
                 </div>

@@ -2,6 +2,7 @@ import { useSuperAdminStore } from '@/store/superAdminStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { CityDistributionCard } from '@/components/super-admin/CityDistributionCard';
 import {
   Building2,
   CheckCircle,
@@ -49,14 +50,14 @@ export default function SuperAdminDashboardPage() {
   };
 
   const stats = [
-    { label: 'Total Clients', value: totalClients, icon: Building2, bgColor: 'bg-slate-700', iconColor: 'text-primary' },
-    { label: 'Active Clients', value: activeClients, icon: CheckCircle, bgColor: 'bg-slate-700', iconColor: 'text-success' },
-    { label: 'Expired', value: expiredClients, icon: XCircle, bgColor: 'bg-slate-700', iconColor: 'text-destructive' },
-    { label: 'Suspended', value: suspendedClients, icon: AlertTriangle, bgColor: 'bg-slate-700', iconColor: 'text-warning' },
-    { label: 'Restaurants', value: restaurantsOnly, icon: UtensilsCrossed, bgColor: 'bg-slate-700', iconColor: 'text-orange-500' },
-    { label: 'Hotels', value: hotelsOnly, icon: Hotel, bgColor: 'bg-slate-700', iconColor: 'text-blue-500' },
-    { label: 'POS Users', value: posUsers, icon: TrendingUp, bgColor: 'bg-slate-700', iconColor: 'text-emerald-500' },
-    { label: 'PMS Users', value: pmsUsers, icon: Users, bgColor: 'bg-slate-700', iconColor: 'text-violet-500' },
+    { label: 'Total Clients', value: totalClients, icon: Building2, iconColor: 'text-primary' },
+    { label: 'Active Clients', value: activeClients, icon: CheckCircle, iconColor: 'text-success' },
+    { label: 'Expired', value: expiredClients, icon: XCircle, iconColor: 'text-destructive' },
+    { label: 'Suspended', value: suspendedClients, icon: AlertTriangle, iconColor: 'text-warning' },
+    { label: 'Restaurants', value: restaurantsOnly, icon: UtensilsCrossed, iconColor: 'text-orange-500' },
+    { label: 'Hotels', value: hotelsOnly, icon: Hotel, iconColor: 'text-blue-500' },
+    { label: 'POS Users', value: posUsers, icon: TrendingUp, iconColor: 'text-emerald-500' },
+    { label: 'PMS Users', value: pmsUsers, icon: Users, iconColor: 'text-violet-500' },
   ];
 
   return (
@@ -67,7 +68,7 @@ export default function SuperAdminDashboardPage() {
         <p className="text-slate-500">Overview of all Flozen clients and services</p>
       </div>
 
-      {/* Stats Grid - White cards on light background */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((stat) => (
           <Card key={stat.label} className="hover:shadow-lg transition-shadow bg-white border-slate-200 shadow-sm">
@@ -86,9 +87,15 @@ export default function SuperAdminDashboardPage() {
         ))}
       </div>
 
+      {/* City Distribution Section */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <CityDistributionCard clients={clients} type="pos" />
+        <CityDistributionCard clients={clients} type="pms" />
+      </div>
+
       {/* Alerts Section */}
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Expiring Soon - White card */}
+        {/* Expiring Soon */}
         <Card className="border-slate-200 bg-white shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -144,7 +151,7 @@ export default function SuperAdminDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Open Complaints - White card with red accent */}
+        {/* Open Complaints */}
         <Card className="border-slate-200 bg-white shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -212,7 +219,7 @@ export default function SuperAdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Recent Clients - White card */}
+      {/* Recent Clients */}
       <Card className="bg-white border-slate-200 shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
