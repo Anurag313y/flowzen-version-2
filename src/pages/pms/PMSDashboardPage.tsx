@@ -33,9 +33,9 @@ export default function PMSDashboardPage() {
           <h1 className="text-3xl font-bold">Hotel Dashboard</h1>
           <p className="text-muted-foreground">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
         </div>
-        <Button onClick={() => navigate('/pms/reservations/new')}>
+        <Button onClick={() => navigate('/pms/rooms')}>
           <Plus className="h-4 w-4 mr-2" />
-          New Reservation
+          Room Dashboard
         </Button>
       </div>
       
@@ -82,7 +82,7 @@ export default function PMSDashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">RevPAR</p>
-                <p className="text-3xl font-bold">${dashboardStats.revpar}</p>
+                <p className="text-3xl font-bold">₹{dashboardStats.revpar}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-primary opacity-80" />
             </div>
@@ -100,19 +100,19 @@ export default function PMSDashboardPage() {
             <div className="grid grid-cols-4 gap-4">
               <div className="text-center p-4 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">Rooms</p>
-                <p className="text-xl font-semibold">${dashboardStats.revenue.rooms.toLocaleString()}</p>
+                <p className="text-xl font-semibold">₹{dashboardStats.revenue.rooms.toLocaleString()}</p>
               </div>
               <div className="text-center p-4 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">F&B</p>
-                <p className="text-xl font-semibold">${dashboardStats.revenue.fb.toLocaleString()}</p>
+                <p className="text-xl font-semibold">₹{dashboardStats.revenue.fb.toLocaleString()}</p>
               </div>
               <div className="text-center p-4 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">Other</p>
-                <p className="text-xl font-semibold">${dashboardStats.revenue.other.toLocaleString()}</p>
+                <p className="text-xl font-semibold">₹{dashboardStats.revenue.other.toLocaleString()}</p>
               </div>
               <div className="text-center p-4 bg-primary/10 rounded-lg">
                 <p className="text-sm text-muted-foreground">Total</p>
-                <p className="text-xl font-bold text-primary">${dashboardStats.revenue.total.toLocaleString()}</p>
+                <p className="text-xl font-bold text-primary">₹{dashboardStats.revenue.total.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>

@@ -84,7 +84,7 @@ export default function PMSRatesPage() {
       ...prev,
       [roomType]: { ...prev[roomType], ...updates },
     }));
-    toast({ title: 'Bulk Update', description: `Updated all ${roomType} rates to $${newRate}` });
+    toast({ title: 'Bulk Update', description: `Updated all ${roomType} rates to ₹${newRate}` });
   };
 
   // Calculate inventory stats
@@ -127,7 +127,7 @@ export default function PMSRatesPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Base Rate</p>
-                  <p className="text-lg font-bold text-primary">${defaultRates[type]}</p>
+                  <p className="text-lg font-bold text-primary">₹{defaultRates[type]}</p>
                 </div>
               </div>
             </CardContent>
@@ -191,7 +191,7 @@ export default function PMSRatesPage() {
                             className="text-sm font-medium hover:text-primary transition-colors cursor-pointer"
                             onClick={() => handleEditStart(type, date)}
                           >
-                            ${rate}
+                            ₹{rate}
                           </button>
                         )}
                       </td>

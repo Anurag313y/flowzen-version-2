@@ -81,7 +81,7 @@ export default function PMSReservationsPage() {
     { 
       key: 'totalAmount', 
       header: 'Total',
-      cell: (row) => `$${row.totalAmount.toFixed(2)}`
+      cell: (row) => `₹${row.totalAmount.toFixed(2)}`
     },
   ];
   
